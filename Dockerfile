@@ -49,9 +49,10 @@ COPY --from=builder /app /app
 
 # Create a non-root user
 RUN useradd --create-home --shell /bin/bash appuser
+# Explicitly set ownership for the app user
+RUN chown -R appuser:appuser /app /home/appuser
 USER appuser
-# Ensure the work directory exists and the user owns it
-RUN mkdir -p /home/appuser/app
+# Remove the explicit mkdir, WORKDIR should work if ownership is correct
 WORKDIR /home/appuser/app # Change WORKDIR to user's home
 
 # Expose port for FastAPI
