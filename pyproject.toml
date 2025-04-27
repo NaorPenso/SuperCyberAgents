@@ -94,8 +94,10 @@ exclude = '''
 /( # Exclude directories
     \.cursor
   | \.github
+    \.venv
+    \.git
 )/
 '''
 
 [tool.isort]
-skip_glob = [".cursor/*", ".github/*"]
+skip_glob = [".cursor/*", ".github/*",".venv/*",".git/*"]
