@@ -15,7 +15,9 @@ class SecurityManagerInput(BaseModel):
         ..., description="The overall security task or analysis goal to be managed."
     )
     # Optional: Add fields for specific context if needed, e.g., target_asset: str
-    error_message: Optional[str] = Field(None, description="Error message if delegation failed")
+    error_message: Optional[str] = Field(
+        None, description="Error message if delegation failed"
+    )
 
 
 class DelegatedTaskResult(BaseModel):

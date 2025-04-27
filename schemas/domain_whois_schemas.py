@@ -5,17 +5,17 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from schemas import register_schema # Import the decorator
+from schemas import register_schema  # Import the decorator
 
 
-@register_schema("DomainWhoisInput") # Register with class name
+@register_schema("DomainWhoisInput")  # Register with class name
 class DomainWhoisInput(BaseModel):
     """Input schema for the Domain WHOIS Agent."""
 
     domain: str = Field(..., description="The domain name to perform WHOIS lookup on.")
 
 
-@register_schema("DomainWhoisOutput") # Register with class name
+@register_schema("DomainWhoisOutput")  # Register with class name
 class DomainWhoisOutput(BaseModel):
     """Output schema for the DomainWhoisAgent.
 

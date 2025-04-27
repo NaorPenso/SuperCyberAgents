@@ -10,7 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from core.initialization import get_agent, get_all_agents
-from schemas.registry import SCHEMA_REGISTRY # Import the registry
+from schemas.registry import SCHEMA_REGISTRY  # Import the registry
 
 # Remove direct schema imports, load dynamically instead
 # from schemas import agent_schemas, tool_schemas # Needed to resolve schema names

@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 SCHEMA_REGISTRY: Dict[str, Type[BaseModel]] = {}
 
+
 def register_schema(name: str):
     """Decorator to register a Pydantic schema class in the registry."""
 

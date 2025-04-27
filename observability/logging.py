@@ -120,7 +120,7 @@ def setup_logging(log_level_arg: str | None = None):
     # --- Handlers --- #
     # 1. Console Handler (uses the determined log_level_int)
     console_handler = logging.StreamHandler(sys.stdout)  # Explicitly use stdout
-    console_handler.setLevel(log_level_int) # Use determined level
+    console_handler.setLevel(log_level_int)  # Use determined level
     console_handler.setFormatter(formatter)
 
     # 2. Rotating File Handler (DEBUG level - unchanged)

@@ -2,9 +2,9 @@
 
 import json
 import logging
-from pathlib import Path
-from typing import Annotated, Any, Optional, List
 from enum import Enum
+from pathlib import Path
+from typing import Annotated, Any, Optional
 
 import typer
 from dotenv import load_dotenv  # Import dotenv
@@ -13,12 +13,13 @@ from rich import print as rprint
 
 from agents.base import BaseAgent
 from core.initialization import get_agent, get_all_agents, initialize_system
-from schemas.registry import SCHEMA_REGISTRY # Import the registry
 # Moved imports to the top
 from observability.logging import setup_logging
+from schemas.registry import SCHEMA_REGISTRY  # Import the registry
 
 # Load environment variables from .env file early
 load_dotenv()
+
 
 # Define LogLevel enum for Typer Choice
 class LogLevel(str, Enum):
@@ -28,16 +29,19 @@ class LogLevel(str, Enum):
     error = "ERROR"
     critical = "CRITICAL"
 
+
 # Initialize logging (will be reconfigured by callback if log level is passed)
 setup_logging()
 
 logger = logging.getLogger(__name__)  # Define logger at module level
+
 
 # --- Callback for Log Level --- #
 def log_level_callback(level: LogLevel | None):
     if level:
         logger.info(f"Setting log level to: {level.value}")
         setup_logging(log_level_arg=level.value)
+
 
 # --- CLI App Setup ---
 app = typer.Typer(
@@ -102,12 +106,10 @@ def _load_cli_input(
     prompt: str | None,
     input_file: Path | None,
     input_json: str | None,
-    agent: BaseAgent # Needed to know the expected input field
+    agent: BaseAgent,  # Needed to know the expected input field
 ) -> dict | None:
     """Loads agent input from prompt, file, or JSON string. Handles errors and returns dict."""
-    inputs_provided = sum(
-        bool(arg) for arg in [prompt, input_file, input_json]
-    )
+    inputs_provided = sum(bool(arg) for arg in [prompt, input_file, input_json])
 
     if inputs_provided == 0:
         rprint(
@@ -127,7 +129,9 @@ def _load_cli_input(
                 input_data = json.load(f)
             rprint(f":floppy_disk: Loaded input from file: {input_file}")
         except json.JSONDecodeError as e:
-            rprint(f":x: [bold red]Error:[/bold red] Failed to parse JSON input file: {e}")
+            rprint(
+                f":x: [bold red]Error:[/bold red] Failed to parse JSON input file: {e}"
+            )
             raise typer.Exit(code=1) from e
         except Exception as e:
             rprint(f":x: [bold red]Error:[/bold red] Failed to read input file: {e}")
@@ -137,17 +141,21 @@ def _load_cli_input(
             input_data = json.loads(input_json)
             rprint(":keyboard: Loaded input from JSON string.")
         except json.JSONDecodeError as e:
-            rprint(f":x: [bold red]Error:[/bold red] Failed to parse JSON input string: {e}")
+            rprint(
+                f":x: [bold red]Error:[/bold red] Failed to parse JSON input string: {e}"
+            )
             raise typer.Exit(code=1) from e
     elif prompt:
-        rprint(f":speech_balloon: Using prompt: \"{prompt}\"")
+        rprint(f':speech_balloon: Using prompt: "{prompt}"')
         # Simplified: Default to using 'task_description' for prompt input.
         # This works for SecurityManager but might need adjustment for other agents.
         input_data = {"task_description": prompt}
         logger.info("Mapping --prompt input to 'task_description' field.")
         # Add a warning if the agent doesn't seem to expect 'task_description'
         input_schema_class = agent.input_schema_class
-        if not input_schema_class or "task_description" not in getattr(input_schema_class, 'model_fields', {}):
+        if not input_schema_class or "task_description" not in getattr(
+            input_schema_class, "model_fields", {}
+        ):
             rprint(
                 f":warning: [bold yellow]Warning:[/bold yellow] Agent '{agent.config.id}' input schema ('{getattr(input_schema_class, '__name__', 'N/A')}') "
                 "might not directly use 'task_description'. Check agent requirements if prompt input fails."
@@ -299,7 +307,9 @@ def run_agent_cli(
     try:
         agent = get_agent(agent_id)
         if not agent:
-            rprint(f":x: [bold red]Error:[/bold red] Agent '{agent_id}' not found or not loaded.")
+            rprint(
+                f":x: [bold red]Error:[/bold red] Agent '{agent_id}' not found or not loaded."
+            )
             raise typer.Exit(code=1)
     except Exception as e:
         rprint(f":x: [bold red]Error getting agent '{agent_id}':[/bold red] {e}")
