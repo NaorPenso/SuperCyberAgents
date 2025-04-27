@@ -35,14 +35,20 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
-          # tags: |
+          tags: |
+            # set latest tag for default branch
+            type=edge,branch=main
+            # set tag for version tags like v1.0.0
+            type=ref,event=tag
+            # set tag for commit sha
+            type=sha,prefix=,suffix=,format=short
           #   type=schedule
-          #   type=ref,event=branch
+          #   type=ref,event=branch # Use edge type for main branch instead
           #   type=ref,event=pr
           #   type=semver,pattern={{version}}
           #   type=semver,pattern={{major}}.{{minor}}
           #   type=semver,pattern={{major}}
-          #   type=sha
+          #   type=sha # Use format=short
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6

@@ -56,5 +56,5 @@ WORKDIR /home/appuser/app # Change WORKDIR to user's home
 EXPOSE 8000
 
 # Default command to run the FastAPI server using the virtualenv Python
-# Note: Adjust path if .venv is not directly under /app
-CMD [".venv/bin/uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Use absolute path to .venv created in /app
+CMD ["/app/.venv/bin/uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"] 
