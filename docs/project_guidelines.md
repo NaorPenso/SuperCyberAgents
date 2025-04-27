@@ -11,7 +11,7 @@ This document consolidates all the key guidelines, rules, and coding standards f
 *   **Purpose:** Develop customizable AI agents for cybersecurity tasks using the Pydantic-AI framework.
 *   **Development Focus:** Implementing agents with appropriate prompts/instructions, tools, dependencies, and structured outputs using Pydantic-AI.
 *   **Mandatory Workflow:** Poetry MUST be used exclusively for dependency management (`pyproject.toml`) and running tests (`poetry run pytest`).
-*   **Coding Standards:** Adhere strictly to `careful_coding` guidelines (clean code, meaningful names, DRY, SRP, etc.) and Flake8/Ruff rules.
+*   **Coding Standards:** Adhere strictly to `careful_coding` guidelines (clean code, meaningful names, DRY, SRP, etc.) and Ruff rules.
 *   **Critical Constraint:** Do NOT mention "Cursor" or specific AI tooling/rules in project code, documentation, commit messages, PRs, or issues.
 
 ### User's Business Objective
@@ -253,11 +253,11 @@ Guidelines for writing clean, maintainable, and human-readable code. Apply these
 
 ---
 
-## 6. Flake8/Ruff Style Enforcement
+## 6. Ruff Style Enforcement
 
-You MUST ensure all Python code you generate, modify, or suggest **strictly adheres** to the Flake8/Ruff linting rules as configured in this project (`pyproject.toml`). Non-compliance is unacceptable.
+You MUST ensure all Python code you generate, modify, or suggest **strictly adheres** to the Ruff linting rules as configured in this project (`pyproject.toml`). Non-compliance is unacceptable.
 
-Always refer to the `pyproject.toml` for the specific Flake8/Ruff configuration, including ignored rules (`ignore = [...]`) or selected rules (`select = [...]`).
+Always refer to the `pyproject.toml` for the specific Ruff configuration, including ignored rules (`ignore = [...]`) or selected rules (`select = [...]`).
 
 ### Key Directive Example:
 
@@ -265,7 +265,7 @@ Always refer to the `pyproject.toml` for the specific Flake8/Ruff configuration,
 
 ### Core Flake8 Violations to Enforce (Non-Exhaustive):
 
-Actively check for and prevent **all** violations reported by the configured linters (Flake8/Ruff). This includes, but is not limited to:
+Actively check for and prevent **all** violations reported by the configured linters (Ruff). This includes, but is not limited to:
 
 *   **Pycodestyle Errors (E***) and Warnings (W***):** Enforce PEP 8 style regarding indentation, whitespace, blank lines, imports, line length (max 88 chars), and statements (e.g., avoid `E722` bare `except:`).
 *   **Pyflakes Errors (F***):** Prevent logical errors like unused imports (`F401`), undefined names (`F821`), unused variables (`F841`), issues with control flow (`F7xx`), and incorrect syntax/runtime issues (`F5xx-F9xx`).

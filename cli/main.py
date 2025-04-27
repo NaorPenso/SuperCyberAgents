@@ -2,6 +2,7 @@
 
 import json
 import logging
+from enum import Enum
 from pathlib import Path
 from typing import Annotated, Any, Optional
 
@@ -12,18 +13,36 @@ from rich import print as rprint
 
 from agents.base import BaseAgent
 from core.initialization import get_agent, get_all_agents, initialize_system
-from schemas.registry import SCHEMA_REGISTRY # Import the registry
+
 # Moved imports to the top
 from observability.logging import setup_logging
+from schemas.registry import SCHEMA_REGISTRY  # Import the registry
 
 # Load environment variables from .env file early
 load_dotenv()
 
-# Initialize logging and system early for CLI use
-# Note: CLI output might be noisy if init logs heavily to stdout
-setup_logging()  # Configure basic logging
+
+# Define LogLevel enum for Typer Choice
+class LogLevel(str, Enum):
+    debug = "DEBUG"
+    info = "INFO"
+    warning = "WARNING"
+    error = "ERROR"
+    critical = "CRITICAL"
+
+
+# Initialize logging (will be reconfigured by callback if log level is passed)
+setup_logging()
 
 logger = logging.getLogger(__name__)  # Define logger at module level
+
+
+# --- Callback for Log Level --- #
+def log_level_callback(level: LogLevel | None):
+    if level:
+        logger.info(f"Setting log level to: {level.value}")
+        setup_logging(log_level_arg=level.value)
+
 
 # --- CLI App Setup ---
 app = typer.Typer(
@@ -84,16 +103,23 @@ def _get_schema_class_cli(schema_name: str) -> type[BaseModel] | None:
     return SCHEMA_REGISTRY.get(schema_name)
 
 
-def _load_cli_input(input_file: Path | None, input_json: str | None) -> dict | None:
-    """Loads agent input from file or JSON string, handles errors, and returns dict."""
-    if input_file and input_json:
+def _load_cli_input(
+    prompt: str | None,
+    input_file: Path | None,
+    input_json: str | None,
+    agent: BaseAgent,  # Needed to know the expected input field
+) -> dict | None:
+    """Loads agent input from prompt, file, or JSON string. Handles errors and returns dict."""
+    inputs_provided = sum(bool(arg) for arg in [prompt, input_file, input_json])
+
+    if inputs_provided == 0:
         rprint(
-            ":x: [bold red]Error:[/bold red] Cannot use both --input-file and --input-json."
+            ":x: [bold red]Error:[/bold red] Must provide agent input via --prompt, --input-file, or --input-json."
         )
         raise typer.Exit(code=1)
-    if not input_file and not input_json:
+    if inputs_provided > 1:
         rprint(
-            ":x: [bold red]Error:[/bold red] Must provide either --input-file or --input-json."
+            ":x: [bold red]Error:[/bold red] Please provide input using only one of: --prompt, --input-file, --input-json."
         )
         raise typer.Exit(code=1)
 
@@ -120,6 +146,22 @@ def _load_cli_input(input_file: Path | None, input_json: str | None) -> dict | N
                 f":x: [bold red]Error:[/bold red] Failed to parse JSON input string: {e}"
             )
             raise typer.Exit(code=1) from e
+    elif prompt:
+        rprint(f':speech_balloon: Using prompt: "{prompt}"')
+        # Simplified: Default to using 'task_description' for prompt input.
+        # This works for SecurityManager but might need adjustment for other agents.
+        input_data = {"task_description": prompt}
+        logger.info("Mapping --prompt input to 'task_description' field.")
+        # Add a warning if the agent doesn't seem to expect 'task_description'
+        input_schema_class = agent.input_schema_class
+        if not input_schema_class or "task_description" not in getattr(
+            input_schema_class, "model_fields", {}
+        ):
+            rprint(
+                f":warning: [bold yellow]Warning:[/bold yellow] Agent '{agent.config.id}' input schema ('{getattr(input_schema_class, '__name__', 'N/A')}') "
+                "might not directly use 'task_description'. Check agent requirements if prompt input fails."
+            )
+
     return input_data
 
 
@@ -128,7 +170,7 @@ def _validate_cli_agent_input(agent: BaseAgent, input_data: dict) -> BaseModel |
     input_schema_class = agent.input_schema_class
     if not input_schema_class:
         rprint(
-            f":x: [bold red]Error:[/bold red] Input schema '{agent.config.input_schema}' class not resolved for agent '{agent.config.id}'."
+            f":x: [bold red]Error:[/bold red] Input schema '{getattr(agent.config, 'input_schema', 'N/A')}' class not resolved for agent '{getattr(agent.config, 'id', 'N/A')}'."
         )
         raise typer.Exit(code=1)
 
@@ -194,7 +236,7 @@ def list_agents_cli():
         if config:
             rprint(f"  Description: {getattr(config, 'description', 'N/A')}")
             rprint(
-                f"  LLM: {getattr(config, 'llm_provider', 'N/A')} / {getattr(config, 'model', 'N/A')}"
+                f"  LLM: {getattr(config, 'llm_provider', 'Default')} / {getattr(config, 'model', 'Default')}"
             )
             rprint(f"  Input Schema: {getattr(config, 'input_schema', 'N/A')}")
             rprint(f"  Output Schema: {getattr(config, 'output_schema', 'N/A')}")
@@ -208,6 +250,15 @@ def list_agents_cli():
 @agents_app.command("run")
 def run_agent_cli(
     agent_id: Annotated[str, typer.Argument(help="The ID of the agent to run.")],
+    prompt: Annotated[
+        Optional[str],
+        typer.Option(
+            "--prompt",
+            "-p",
+            help="Direct text prompt for the agent (alternative to JSON input).",
+            show_default=False,
+        ),
+    ] = None,
     input_file: Annotated[
         Optional[Path],
         typer.Option(
@@ -231,6 +282,14 @@ def run_agent_cli(
             show_default=False,
         ),
     ] = None,
+    llm_provider: Annotated[
+        Optional[str],
+        typer.Option(
+            "--llm-provider",
+            help="Override the LLM provider for this run (e.g., 'openai', 'cerebras').",
+            show_default=False,
+        ),
+    ] = None,
     # output_file: Annotated[ # Add back later if needed
     #     Optional[Path],
     #     typer.Option(
@@ -242,15 +301,10 @@ def run_agent_cli(
     #     ),
     # ] = None,
 ):
-    """Run a specific agent with input from a JSON file OR a JSON string."""
+    """Run a specific agent with the provided input (prompt, file, or JSON string)."""
     rprint(f"Attempting to run agent: [bold blue]{agent_id}[/bold blue]")
 
-    # 1. Load Raw Input
-    input_data = _load_cli_input(input_file, input_json)
-    if input_data is None:  # Should have exited in helper, but check defensively
-        raise typer.Exit(code=1)
-
-    # 2. Get Agent Instance
+    # --- Get Agent --- #
     try:
         agent = get_agent(agent_id)
         if not agent:
@@ -263,18 +317,31 @@ def run_agent_cli(
         logger.exception(f"Failed during get_agent for {agent_id}")
         raise typer.Exit(code=1) from e
 
-    # 3. Validate Input against Agent Schema
-    validated_input = _validate_cli_agent_input(agent, input_data)
-    if validated_input is None:  # Should have exited in helper
+    # --- Load & Validate Input --- #
+    input_data = _load_cli_input(prompt, input_file, input_json, agent)
+    if input_data is None:
         raise typer.Exit(code=1)
 
-    # 4. Execute the Agent
+    validated_input = _validate_cli_agent_input(agent, input_data)
+    if validated_input is None:
+        raise typer.Exit(code=1)
+
+    # --- Handle LLM Override (Placeholder/Warning) --- #
+    if llm_provider:
+        rprint(
+            f":warning: [bold yellow]Warning:[/bold yellow] LLM provider override ('{llm_provider}') requested. "
+            "This feature is not fully implemented in the agent core yet and will be ignored for this run."
+        )
+        # TODO: Implement actual LLM override logic within agent.run() or by temporarily reconfiguring the agent's client.
+
+    # --- Execute Agent --- #
     try:
         rprint(":rocket: Running agent...")
+        # NOTE: Pass llm_provider override here if agent.run supports it in the future
         output_obj = agent.run(validated_input)
         rprint(":tada: Agent execution completed!")
 
-        # 5. Handle Output
+        # --- Handle Output --- #
         _handle_cli_output(output_obj)
         # TODO: Add saving to output_file if option is enabled
 

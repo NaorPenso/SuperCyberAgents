@@ -1,8 +1,17 @@
+# Name of this GitHub Actions workflow.
 name: Security Scan (Semgrep)
 
 on:
-  pull_request:
-    branches: [ main ] # Or your main branch name
+  # Scan changed files in PRs (diff-aware scanning):
+  pull_request: {}
+  # Scan on-demand through GitHub Actions interface:
+  workflow_dispatch: {}
+  # Scan mainline branches and report all findings:
+  push:
+    branches: [ "main" ] # Or your main branch name
+  # Schedule the CI job (this method uses cron syntax):
+  schedule:
+    - cron: '35 10 * * 1' # Example: Scan every Monday at 10:35 UTC
 
 permissions:
   contents: read # needed to read code
@@ -10,18 +19,24 @@ permissions:
 
 jobs:
   semgrep:
+    # User definable name of this GitHub Actions job.
     name: Semgrep Scan
+    # If you are self-hosting, change the following `runs-on` value:
     runs-on: ubuntu-latest
+
+    container:
+      # A Docker image with Semgrep installed. Do not change this.
+      image: semgrep/semgrep
+
+    # Skip any PR created by dependabot to avoid permission issues:
+    if: (github.actor != 'dependabot[bot]')
+
     steps:
+      # Fetch project source with GitHub Actions Checkout.
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Run Semgrep scan using the official action
-      # See https://github.com/semgrep/semgrep-action
+      # Run the "semgrep scan" command on the command line of the docker image.
       - name: Run Semgrep Scan
-        uses: semgrep/semgrep-action@v2
-        with:
-          # Optionally specify rules, e.g.:
-          # config: "p/python"
-          # Or rely on .semgrep.yml in the repository root
-          audit_on: pull_request # Recommended for PR feedback 
+        run: semgrep scan --config auto
+        # Removed the previous 'uses: semgrep/semgrep-action@v2' step 

@@ -12,14 +12,13 @@ from pydantic import BaseModel, ValidationError
 
 # --- Move all project-specific imports to the top --- #
 import agents
-import tools
 import schemas
-from schemas.registry import SCHEMA_REGISTRY
+import tools
 from agents import AGENT_REGISTRY
 from agents.base import ToolConfig  # Import ToolConfig from agents.base
 from agents.base import AgentConfig, BaseAgent
-from providers.llm import (BedrockProvider, CerebrasProvider, LLMProvider,
-                           OpenAIProvider)
+from providers.llm import BedrockProvider, CerebrasProvider, LLMProvider, OpenAIProvider
+from schemas.registry import SCHEMA_REGISTRY
 from tools import TOOL_REGISTRY
 from tools.base import BaseTool
 
@@ -214,7 +213,9 @@ def _get_required_tool_instances(agent_cfg: AgentConfig) -> List[BaseTool] | Non
     return agent_tools_instances
 
 
-def _resolve_agent_schemas(agent_cfg: AgentConfig) -> tuple[type[BaseModel] | None, type[BaseModel] | None]:
+def _resolve_agent_schemas(
+    agent_cfg: AgentConfig,
+) -> tuple[type[BaseModel] | None, type[BaseModel] | None]:
     """Resolves and returns the input and output schema classes for an agent using the registry."""
     input_schema_class = None
     output_schema_class = None
@@ -357,7 +358,7 @@ def initialize_system():
     logger.info("Starting system initialization...")
 
     # Order matters: Schemas -> Providers -> Tools -> Agents
-    _import_modules(schemas) # Import all schema modules to populate registry
+    _import_modules(schemas)  # Import all schema modules to populate registry
     _initialize_providers()
     _load_and_register_tools()
     _load_and_register_agents()

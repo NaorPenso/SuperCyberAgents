@@ -3,7 +3,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, List, Literal, Optional, Type, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -19,6 +19,9 @@ from tools.base import BaseTool
 # Set up logger for this module
 logger = logging.getLogger(__name__)
 
+# Define allowed LLM providers
+AllowedProviders = Literal["openai", "azure_openai", "aws_bedrock", "cerebras"]
+
 
 class ToolRef(BaseModel):
     """Reference to a tool used by an agent."""
@@ -33,9 +36,9 @@ class AgentConfig(BaseModel):
     id: str = Field(..., description="Unique identifier for the agent")
     description: str = Field(..., description="Description of the agent's purpose")
     enabled: bool = Field(True, description="Whether the agent is enabled")
-    llm_provider: Optional[str] = Field(
+    llm_provider: Optional[AllowedProviders] = Field(
         None,
-        description="LLM provider key (e.g., 'openai', 'azure_openai'). Defaults to DEFAULT_LLM_PROVIDER env var.",
+        description="LLM provider key. Defaults to DEFAULT_LLM_PROVIDER env var.",
     )
     model: Optional[str] = Field(
         None,
@@ -162,3 +165,10 @@ class BaseAgent(ABC, Generic[InputType, OutputType]):
         raise NotImplementedError(
             f"Agent {self.__class__.__name__} must implement the run method."
         )
+
+    async def run_async(self, input_data: InputType) -> OutputType:
+        """Async wrapper around the synchronous run method for API compatibility.
+
+        In the future, this could be implemented with true async/await patterns.
+        """
+        return self.run(input_data)
