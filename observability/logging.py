@@ -71,11 +71,12 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(serializable_entry)
 
 
-def setup_logging(log_level: str = "INFO"):
-    """Configure root logger for JSON output to stdout.
+def setup_logging(log_level_arg: str | None = None):
+    """Configure root logger for JSON output to stdout/file.
 
     Args:
-        log_level: The minimum log level (e.g., "DEBUG", "INFO", "WARNING").
+        log_level_arg: The minimum log level (e.g., "DEBUG", "INFO", "WARNING").
+                       Overrides LOG_LEVEL env var if provided.
     """
     # --- Define Log File Path --- #
     log_file_path = "logs/app.log"
@@ -85,7 +86,9 @@ def setup_logging(log_level: str = "INFO"):
     log_dir_obj.mkdir(parents=True, exist_ok=True)
 
     # --- Determine Log Level --- #
-    log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+    # Priority: Argument > Environment Variable > Default
+    log_level_str = (log_level_arg or os.getenv("LOG_LEVEL", "INFO")).upper()
+
     log_levels = {
         "CRITICAL": logging.CRITICAL,
         "ERROR": logging.ERROR,
@@ -93,34 +96,34 @@ def setup_logging(log_level: str = "INFO"):
         "INFO": logging.INFO,
         "DEBUG": logging.DEBUG,
     }
-    log_level = log_levels.get(
+    log_level_int = log_levels.get(
         log_level_str, logging.INFO
     )  # Default to INFO if invalid
 
     # --- Root Logger Configuration --- #
     # Configure the root logger - this applies to all loggers unless overridden
-    # Set the root logger level first
+    # Set the root logger level first to lowest level to allow handlers control
     root_logger = logging.getLogger()
-    root_logger.setLevel(log_level)
+    root_logger.setLevel(logging.DEBUG)
 
     # Clear existing handlers (important if this function is called multiple times)
     if root_logger.hasHandlers():
         root_logger.handlers.clear()
 
     # --- Formatter --- #
-    # Consistent JSON formatter
+    # Consistent JSON formatter (assuming formatter defined above or keeping existing)
     formatter = logging.Formatter(
         fmt='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}',
         datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
     )
 
     # --- Handlers --- #
-    # 1. Console Handler (uses the resolved log_level)
+    # 1. Console Handler (uses the determined log_level_int)
     console_handler = logging.StreamHandler(sys.stdout)  # Explicitly use stdout
-    console_handler.setLevel(log_level)
+    console_handler.setLevel(log_level_int) # Use determined level
     console_handler.setFormatter(formatter)
 
-    # 2. Rotating File Handler (DEBUG level)
+    # 2. Rotating File Handler (DEBUG level - unchanged)
     file_handler = RotatingFileHandler(
         log_file_path_obj, maxBytes=10 * 1024 * 1024, backupCount=5  # 10 MB
     )
@@ -133,7 +136,7 @@ def setup_logging(log_level: str = "INFO"):
 
     # Log confirmation *after* handlers are added
     root_logger.info(
-        f"Logging setup complete. Console Level: {log_level_str}, File Level: DEBUG"
+        f"Logging setup complete. Console Level: {log_level_str} ({log_level_int}), File Level: DEBUG"
     )
 
     # --- Optional: Logfire Integration --- #
@@ -178,4 +181,4 @@ def setup_logging(log_level: str = "INFO"):
     logging.getLogger("openai").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    root_logger.info(f"Logging setup complete. Level: {log_level}")
+    # root_logger.info(f"Logging setup complete. Level: {log_level_int}") # Removed redundant message
