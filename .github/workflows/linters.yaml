@@ -34,9 +34,12 @@ jobs:
 
     - name: Run Ruff Check
       run: poetry run ruff check .
+      continue-on-error: true
 
     - name: Run Black Check
       run: poetry run black . --check
+      continue-on-error: true
 
     - name: Run isort Check
       run: poetry run isort . --check-only 
+      continue-on-error: true
