@@ -2,12 +2,13 @@
 
 # import importlib # Removed
 import logging
+
 # from pathlib import Path # Removed
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 import pydantic
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from core.initialization import get_agent, get_all_agents
 from schemas.registry import SCHEMA_REGISTRY  # Import the registry
@@ -65,7 +66,7 @@ def _get_schema_class(schema_name: str) -> type[BaseModel] | None:
 class InvokeRequest(BaseModel):
     """Request model for invoking an agent."""
 
-    input: Dict[str, Any] = pydantic.Field(
+    input: Dict[str, Any] = Field(
         ..., description="Input data for the agent, must match agent's input schema."
     )
 
@@ -73,8 +74,8 @@ class InvokeRequest(BaseModel):
 class InvokeResponse(BaseModel):
     """Response model for agent invocation."""
 
-    agent_id: str = pydantic.Field(..., description="The ID of the invoked agent.")
-    output: Dict[str, Any] = pydantic.Field(
+    agent_id: str = Field(..., description="The ID of the invoked agent.")
+    output: Dict[str, Any] = Field(
         ..., description="Output data from the agent, matches agent's output schema."
     )
 
@@ -83,12 +84,12 @@ class AgentInfo(BaseModel):
     """Information about a loaded agent."""
 
     id: str
-    description: str
-    llm_provider: str
-    model: str
-    input_schema_name: str
-    output_schema_name: str
-    tools: list[str]  # List of tool aliases used
+    description: Optional[str] = None
+    llm_provider: Optional[str] = None
+    model: Optional[str] = None
+    input_schema_name: Optional[str] = None
+    output_schema_name: Optional[str] = None
+    tools: Optional[List[str]] = []  # List of tool aliases used
 
 
 # --- API Endpoints ---
@@ -146,7 +147,7 @@ async def invoke_agent(agent_id: str, request: InvokeRequest):
         # TODO: Consider adding usage limits from config or request
         # usage_limits = UsageLimits(...)
         # result = await agent.run(validated_input, usage_limits=usage_limits)
-        agent_output = await agent.run(input_obj)
+        agent_output = await agent.run_async(input_obj)
         logger.info(f"Agent '{agent_id}' execution successful.")
 
         # Convert Pydantic model output to dict for API response
@@ -155,7 +156,8 @@ async def invoke_agent(agent_id: str, request: InvokeRequest):
         else:
             output_data = agent_output  # Assume already JSON-serializable
 
-        return output_data
+        # Return response formatted according to InvokeResponse model
+        return InvokeResponse(agent_id=agent_id, output=output_data)
 
     except Exception as e:
         logger.exception(f"Error during agent '{agent_id}' execution: {e}")

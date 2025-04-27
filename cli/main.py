@@ -13,6 +13,7 @@ from rich import print as rprint
 
 from agents.base import BaseAgent
 from core.initialization import get_agent, get_all_agents, initialize_system
+
 # Moved imports to the top
 from observability.logging import setup_logging
 from schemas.registry import SCHEMA_REGISTRY  # Import the registry

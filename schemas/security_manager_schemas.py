@@ -52,3 +52,6 @@ class SecurityManagerOutput(BaseModel):
     error: Optional[str] = Field(
         None, description="Error message if the overall management process failed."
     )
+    status: str = Field(
+        "success", description="Status of the overall execution ('success' or 'error')"
+    )

@@ -139,46 +139,7 @@ def setup_logging(log_level_arg: str | None = None):
         f"Logging setup complete. Console Level: {log_level_str} ({log_level_int}), File Level: DEBUG"
     )
 
-    # --- Optional: Logfire Integration --- #
-    # If Logfire integration is enabled via environment variable or config
-    logfire_enabled = os.getenv("LOGFIRE_ENABLED", "false").lower() == "true"
-    logfire_token = os.getenv("LOGFIRE_TOKEN")  # Or other config mechanism
-
-    if logfire_enabled:
-        if logfire_token:
-            try:
-                # Ensure Logfire is imported only if enabled
-                import logfire
-
-                # Configure Logfire
-                logfire.configure(send_to_logfire=True, token=logfire_token)
-                # Instrument libraries (consider moving instrumentation to app startup)
-                logfire.instrument_httpx()
-                logfire.instrument_openai()  # If using OpenAI
-                # Add other instrumentations as needed (e.g., Bedrock)
-
-                root_logger.info("Logfire integration enabled and configured.")
-
-                # Optional: Add Logfire handler to root logger
-                # Note: Logfire typically captures logs automatically via instrumentation
-                # You might not need an explicit handler unless you want fine control
-                # logfire_handler = logfire.LogfireHandler()
-                # root_logger.addHandler(logfire_handler)
-
-            except ImportError:
-                root_logger.warning(
-                    "Logfire enabled but 'logfire' package not found. Skipping."
-                )
-            except Exception as e:
-                root_logger.error(f"Failed to configure Logfire: {e}")
-        else:
-            root_logger.warning(
-                "Logfire enabled but LOGFIRE_TOKEN environment variable not set."
-            )
-
     # Adjust log levels for noisy libraries if needed
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("openai").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
-
-    # root_logger.info(f"Logging setup complete. Level: {log_level_int}") # Removed redundant message

@@ -14,10 +14,11 @@ from pydantic import ValidationError
 # from ..base_agent import BaseAgent # Remove relative import
 from agents import register_agent  # Import the decorator
 from agents.base import AgentConfig, BaseAgent  # Import from project structure
-from core.llm_clients import \
-    get_llm_client  # Import project's LLM client factory
+from core.llm_clients import get_llm_client  # Import project's LLM client factory
+
 # --- Import Schemas (will be defined later) --- #
 from schemas.domain_whois_schemas import DomainWhoisInput, DomainWhoisOutput
+
 # --- Adjust Tool Import Path --- #
 # Assuming WhoisTool will be refactored into tools/whois_lookup_tool/
 # from tools.whois_lookup.whois_tool import WhoisTool
@@ -115,8 +116,9 @@ class DomainWhoisAgent(
         # We'll need to define WhoisLookupInput schema later.
         try:
             # This assumes WhoisLookupInput exists and takes a 'domain' field
-            from schemas.whois_lookup_schemas import \
-                WhoisLookupInput  # Define this later
+            from schemas.whois_lookup_schemas import (
+                WhoisLookupInput,
+            )  # Define this later
 
             tool_input = WhoisLookupInput(domain=input_data.domain)
         except ValidationError as e:  # ImportError shouldn't happen if schemas exist

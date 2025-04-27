@@ -4,9 +4,7 @@ description: "An example agent that analyzes security logs using an IP lookup to
 enabled: true
 llm_provider: "openai" # Must be one of ["openai", "azure_openai", "aws_bedrock", "cerebras"]
 model: "gpt-4o-mini" # Specific model name for the provider
-tools:
-  - name: "ip_lookup_tool" # Tool name (matches ToolConfig.name)
-    alias: "ip_lookup" # Alias used by the agent to reference the tool
+tools: [] # No tools assigned to this example agent anymore
 # Example: Add another tool if needed
 # - name: "vuln_db_tool"
 #   alias: "vuln_db"

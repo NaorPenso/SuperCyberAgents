@@ -17,8 +17,7 @@ import tools
 from agents import AGENT_REGISTRY
 from agents.base import ToolConfig  # Import ToolConfig from agents.base
 from agents.base import AgentConfig, BaseAgent
-from providers.llm import (BedrockProvider, CerebrasProvider, LLMProvider,
-                           OpenAIProvider)
+from providers.llm import BedrockProvider, CerebrasProvider, LLMProvider, OpenAIProvider
 from schemas.registry import SCHEMA_REGISTRY
 from tools import TOOL_REGISTRY
 from tools.base import BaseTool

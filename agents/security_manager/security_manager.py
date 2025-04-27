@@ -8,13 +8,14 @@ from pydantic import BaseModel, Field, ValidationError
 
 from agents import register_agent
 from agents.base import AgentConfig, BaseAgent
-from core.initialization import \
-    get_all_agents  # Import to get available agents
+from core.initialization import get_all_agents  # Import to get available agents
 from core.llm_clients import get_llm_client
 from schemas.delegate_task_schemas import DelegateTaskInput, DelegateTaskOutput
-from schemas.security_manager_schemas import (DelegatedTaskResult,
-                                              SecurityManagerInput,
-                                              SecurityManagerOutput)
+from schemas.security_manager_schemas import (
+    DelegatedTaskResult,
+    SecurityManagerInput,
+    SecurityManagerOutput,
+)
 from tools.base import BaseTool
 
 logger = logging.getLogger(__name__)
@@ -202,13 +203,16 @@ class SecurityManager(BaseAgent[SecurityManagerInput, SecurityManagerOutput]):
             error_msg = "Failed to generate a valid execution plan for the task."
             logger.error(error_msg)
             return SecurityManagerOutput(
-                summary="Planning Failed", delegated_results=[], error=error_msg
+                summary="Planning Failed",
+                delegated_results=[],
+                error=error_msg,
+                status="error",
             )
         elif not security_plan.delegations:
             summary_msg = "The task could not be fulfilled with the available agents or requires no delegation."
             logger.warning(summary_msg)
             return SecurityManagerOutput(
-                summary=summary_msg, delegated_results=[], error=None
+                summary=summary_msg, delegated_results=[], error=None, status="success"
             )
 
         # --- Step 2: Delegation Phase --- #
@@ -217,7 +221,10 @@ class SecurityManager(BaseAgent[SecurityManagerInput, SecurityManagerOutput]):
             error_msg = f"Required tool '{delegate_tool_alias}' not found in agent configuration."
             logger.error(error_msg)
             return SecurityManagerOutput(
-                summary="Configuration error.", delegated_results=[], error=error_msg
+                summary="Configuration error.",
+                delegated_results=[],
+                error=error_msg,
+                status="error",
             )
 
         delegate_tool = self.tools[delegate_tool_alias]
