@@ -1,0 +1,25 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [ main ] # Or your main branch name
+
+permissions:
+  contents: read # Required to check file contents
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Dependency Review
+        # Checks for vulnerabilities introduced in the dependencies changed by the PR
+        # See: https://github.com/actions/dependency-review-action
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail the workflow if any vulnerability with moderate or higher severity is found.
+          fail-on-severity: moderate
+          # You can customize this to 'critical', 'high', 'low' or 'moderate'
+          # 'allow-licenses' and 'deny-licenses' can be used for license checks 

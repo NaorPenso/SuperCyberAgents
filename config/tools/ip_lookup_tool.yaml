@@ -1,0 +1,9 @@
+# Example configuration for IPLookupTool
+name: "ip_lookup_tool" # Must match agent's tool name reference and pattern ^[a-z0-9_]+$
+description: "Tool to look up IP reputation from a Threat Intel API."
+# Configuration specific to this tool
+endpoint: "https://api.example-threatintel.com/lookup" # Example URL
+auth_required: true
+timeout_sec: 10 # API call timeout, must be positive integer
+input_schema: "IPLookupInput" # Pydantic model for tool input
+output_schema: "IPLookupOutput" # Pydantic model for tool output 

@@ -1,0 +1,54 @@
+name: Run Pytest Tests
+
+on:
+  pull_request:
+    branches: [ main ] # Or your main branch name
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Run tests on multiple Python versions if desired
+        python-version: ['3.11'] # Match your project's supported versions
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true # Recommended for caching
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root --with dev # Install dev dependencies needed for tests
+
+    # Add steps here if tests require specific environment variables (e.g., from secrets)
+    # Example:
+    # - name: Set up environment variables
+    #   run: |
+    #     echo "SOME_API_KEY=${{ secrets.SOME_API_KEY }}" >> $GITHUB_ENV
+
+    - name: Run Pytest
+      run: poetry run pytest
+
+    # Optional: Upload coverage report
+    # - name: Upload coverage reports to Codecov
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }} # Set this secret in your repository
+    #     fail_ci_if_error: true 

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cyber-ai-agent.fullname" . }}-config
+  labels:
+    {{- include "cyber-ai-agent.labels" . | nindent 4 }}
+data:
+  # Load all files from the files/config directory into the ConfigMap
+  {{- $root := . }}
+  {{- range $path, $bytes := .Files.Glob "files/config/**.yaml" }}
+  {{ base $path }}: |-
+    {{- $root.Files.Get $path | nindent 4 }}
+  {{- end }} 

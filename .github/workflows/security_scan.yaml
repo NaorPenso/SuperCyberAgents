@@ -1,0 +1,27 @@
+name: Security Scan (Semgrep)
+
+on:
+  pull_request:
+    branches: [ main ] # Or your main branch name
+
+permissions:
+  contents: read # needed to read code
+  # Add other permissions as needed by Semgrep rules
+
+jobs:
+  semgrep:
+    name: Semgrep Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Run Semgrep scan using the official action
+      # See https://github.com/semgrep/semgrep-action
+      - name: Run Semgrep Scan
+        uses: semgrep/semgrep-action@v2
+        with:
+          # Optionally specify rules, e.g.:
+          # config: "p/python"
+          # Or rely on .semgrep.yml in the repository root
+          audit_on: pull_request # Recommended for PR feedback 

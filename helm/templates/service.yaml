@@ -1,0 +1,22 @@
+{{- range $agent := .Values.agents }}
+{{- if $agent.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cyber-ai-agent.fullname" $ }}-{{ $agent.name }}
+  labels:
+    {{- include "cyber-ai-agent.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $agent.name }}
+spec:
+  type: {{ $agent.service.type | default "ClusterIP" }}
+  ports:
+    - port: {{ $agent.service.port | default 80 }}
+      targetPort: {{ $agent.service.targetPort | default "http" }} # Can target name or number
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "cyber-ai-agent.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $agent.name }}
+---
+{{- end }}
+{{- end }} 

@@ -1,0 +1,14 @@
+# Configuration for DomainWhoisAgent
+id: "domain_whois_agent"
+description: "Retrieves and structures WHOIS information for a given domain using the whois_lookup_tool."
+enabled: true
+# llm_provider: "openai" # Or another configured provider. LLM use is minimal here.
+# model: "gpt-4o-mini"   # A basic model should suffice.
+tools:
+  - name: "whois_lookup_tool" # Must match the tool's registration name/config
+    alias: "whois_lookup"   # How the agent refers to the tool in its code
+parameters: {}
+  # max_tokens: 50 # LLM interaction is minimal, can keep low if used
+  # temperature: 0.1
+input_schema: "DomainWhoisInput"  # From schemas/domain_whois_schemas.py
+output_schema: "DomainWhoisOutput" # From schemas/domain_whois_schemas.py 

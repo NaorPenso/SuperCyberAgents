@@ -1,0 +1,14 @@
+# Configuration for SecurityManager
+id: "security_manager"
+description: "Orchestrates security tasks, plans steps, delegates to other agents using delegate_task_tool, and summarizes results."
+enabled: true
+# llm_provider: "openai" # Needs a capable model for planning
+# model: "gpt-4o"       # Use a stronger model like gpt-4o or gpt-4
+tools:
+  - name: "delegate_task_tool" # Must match the tool's registration name/config
+    alias: "delegate_task"   # How the agent refers to the tool in its code
+parameters:
+  temperature: 0.2 # Lower temperature for more deterministic planning
+  # max_tokens: 1000 # Adjust as needed for planning/summary complexity
+input_schema: "SecurityManagerInput"  # From schemas/security_manager_schemas.py
+output_schema: "SecurityManagerOutput" # From schemas/security_manager_schemas.py 

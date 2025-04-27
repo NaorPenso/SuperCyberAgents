@@ -1,0 +1,101 @@
+[tool.poetry]
+name = "SuperCyberAgents"
+version = "0.1.0"
+description = "Cybersecurity AI Agent System with Pydantic"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [
+    { include = "agents" },
+    { include = "tools" },
+    { include = "schemas" },
+    { include = "api" },
+    { include = "cli" },
+    { include = "observability" },
+    { include = "providers" },
+    { include = "core" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.111.0"
+uvicorn = { extras = ["standard"], version = "^0.30.1" }
+pydantic = "^2.8.2"
+pyyaml = "^6.0.1"
+typer = { extras = ["rich"], version = "^0.12.3" }
+requests = "^2.32.3"
+openai = "^1.35.7"  # Includes support for OpenAI and Azure OpenAI
+boto3 = { version = "^1.34.131", optional = true } # For AWS Bedrock
+# Add other core dependencies if needed
+pydantic-ai = {extras = ["logfire"], version = "^0.1.6"}
+python-dotenv = "^1.1.0"
+python-whois = "^0.9.5"
+json-repair = "^0.24.0"
+pydantic-settings = "^2.3.4"
+rich = "^13.9.4"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+pytest-asyncio = "^0.23.7" # If testing async FastAPI/agents
+pytest-cov = "^5.0.0"
+ruff = "^0.5.0"
+mypy = "^1.10.0"
+bandit = "^1.7.9"
+yamllint = "^1.35.1"
+types-pyyaml = "^6.0.12.12"
+types-requests = "^2.32.0.20240622"
+httpx = "^0.27.0" # For FastAPI TestClient
+black = "^25.1.0"
+isort = "^6.0.1"
+
+[tool.poetry.extras]
+aws = ["boto3"]
+logfire = ["logfire"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# Define rules to select and ignore here
+select = ["E", "F", "W", "C90", "I", "N", "UP", "B", "A", "DTZ", "T10", "T20", "Q", "RUF"]
+ignore = ["E501", "I001"] # Ignore line length & import sorting errors
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true # Start with this, tighten later if needed
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov=."
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+filterwarnings = [
+    "ignore::DeprecationWarning", # Ignore common deprecation warnings during tests
+]
+
+[tool.bandit]
+# Example: exclude test directories from scans if needed
+# exclude_dirs = ["tests"]
+skips = ["B101"] # Example: skip assert_used if needed for tests
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+exclude = '''
+/( # Exclude directories
+    \.cursor
+  | \.github
+)/
+'''
+
+[tool.isort]
+skip_glob = [".cursor/*", ".github/*"]

@@ -1,0 +1,9 @@
+# Configuration for TemplateTool
+name: "template_tool" # Must match agent's tool name reference and pattern ^[a-z0-9_]+$
+description: "A template tool that performs a simple operation."
+# Add tool-specific configuration if needed
+# endpoint: null
+# auth_required: false
+# timeout_sec: 5
+input_schema: "TemplateToolInput" # Pydantic model for tool input
+output_schema: "TemplateToolOutput" # Pydantic model for tool output 

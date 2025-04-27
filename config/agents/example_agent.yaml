@@ -1,0 +1,17 @@
+# Example configuration for ExampleAgent
+id: "example-agent"
+description: "An example agent that analyzes security logs using an IP lookup tool."
+enabled: true
+llm_provider: "openai" # Must be one of ["openai", "azure_openai", "aws_bedrock", "cerebras"]
+model: "gpt-4o-mini" # Specific model name for the provider
+tools:
+  - name: "ip_lookup_tool" # Tool name (matches ToolConfig.name)
+    alias: "ip_lookup" # Alias used by the agent to reference the tool
+# Example: Add another tool if needed
+# - name: "vuln_db_tool"
+#   alias: "vuln_db"
+parameters:
+  max_tokens: 1000 # Max tokens for LLM (int, >0)
+  temperature: 0.2 # LLM temperature (float 0.0-2.0)
+input_schema: "ExampleAgentInput" # Pydantic model name for agent input
+output_schema: "ExampleAgentOutput" # Pydantic model name for agent output 

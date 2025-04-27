@@ -1,0 +1,6 @@
+# Configuration for DelegateTaskTool
+name: "delegate_task_tool" # Must match the @register_tool name
+description: "Delegates a task execution to another specified agent."
+# No tool-specific config needed
+input_schema: "DelegateTaskInput"   # From schemas/delegate_task_schemas.py
+output_schema: "DelegateTaskOutput" # From schemas/delegate_task_schemas.py 

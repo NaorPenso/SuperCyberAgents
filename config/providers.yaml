@@ -1,0 +1,27 @@
+# Configuration for LLM Providers
+# Store sensitive API keys in environment variables, not here.
+
+openai:
+  # api_key: "${OPENAI_API_KEY}" # Loaded from environment
+  api_base: "https://api.openai.com/v1"
+
+# azure_openai:
+  # api_key: "${AZURE_OPENAI_API_KEY}" # Loaded from environment
+  # endpoint: "${AZURE_OPENAI_ENDPOINT}" # e.g., https://your-resource.openai.azure.com/
+  # deployment_name: "${AZURE_DEPLOYMENT_NAME}" # Your deployment name
+#  api_version: "2023-05-15" # Specify API version if needed
+
+#aws_bedrock:
+  # region: "${AWS_REGION}" # e.g., us-east-1. Uses default region if not set.
+  # profile: "${AWS_PROFILE}" # Optional AWS profile name
+  # Assumes AWS credentials (access key, secret key) are configured via env vars or IAM role
+  # model: Handled per-agent in agent config
+  # pass # No specific config needed here if using default credentials
+
+cerebras:
+  # endpoint: "${CEREBRAS_API_ENDPOINT}" # Endpoint for Cerebras API
+  # api_key: "${CEREBRAS_API_KEY}" # Loaded from environment
+  # model_id: Handled per-agent in agent config
+  {} # Provide an empty dictionary instead of 'pass'
+
+# Add other providers like Anthropic, Cohere etc. if needed 

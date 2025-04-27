@@ -1,0 +1,42 @@
+name: Linting and Formatting Checks
+
+on:
+  pull_request:
+    branches: [ main ] # Or your main branch name
+
+jobs:
+  lint-format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Match your project's Python version
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true # Recommended for caching
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root --with dev # Install dev dependencies
+
+    - name: Run Ruff Check
+      run: poetry run ruff check .
+
+    - name: Run Black Check
+      run: poetry run black . --check
+
+    - name: Run isort Check
+      run: poetry run isort . --check-only 
