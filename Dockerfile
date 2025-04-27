@@ -53,7 +53,7 @@ RUN useradd --create-home --shell /bin/bash appuser
 RUN chown -R appuser:appuser /app /home/appuser
 USER appuser
 # Remove the explicit mkdir, WORKDIR should work if ownership is correct
-WORKDIR /home/appuser/app # Change WORKDIR to user's home
+WORKDIR /home/appuser/app
 
 # Expose port for FastAPI
 EXPOSE 8000
