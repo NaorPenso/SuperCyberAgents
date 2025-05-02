@@ -82,10 +82,11 @@ def test_initialize_system_logs_failure_on_exception(mock_logger_info, caplog):
     with pytest.raises(Exception) as excinfo:
         initialization.initialize_system()
 
-    assert excinfo.value is mock_error # Check it's the same exception we raised
-    assert initialization._INITIALIZED is False # Should be reset on error
-    assert "System initialization check failed." in caplog.text # Updated log message
-    mock_logger_info.assert_called() # Ensure logger.info was attempted
+    assert excinfo.value is mock_error  # Check it's the same exception we raised
+    assert initialization._INITIALIZED is False  # Should be reset on error
+    assert "System initialization check failed." in caplog.text  # Updated log message
+    mock_logger_info.assert_called()  # Ensure logger.info was attempted
+
 
 # This test is slightly different, testing if the whole function raises
 # if the exception isn't caught internally as expected.

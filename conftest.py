@@ -20,8 +20,8 @@ pydantic_ai.models.ALLOW_MODEL_REQUESTS = False
 def monkeysession():
     """Create a session-scoped monkeypatch fixture."""
     mpatch = MonkeyPatch()
-    yield mpatch # pragma: no cover
-    mpatch.undo() # pragma: no cover
+    yield mpatch  # pragma: no cover
+    mpatch.undo()  # pragma: no cover
 
 
 # --- Removed Old Framework Fixtures --- #

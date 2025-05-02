@@ -1,22 +1,24 @@
 """Tests for the Domain Analyzer Agent."""
 
+import re
+from unittest.mock import AsyncMock, patch
+
 import pydantic_ai
 import pytest
-from unittest.mock import AsyncMock, patch
-from pydantic_ai import capture_run_messages
 from pydantic_ai.agent import AgentRunResult
 from pydantic_ai.exceptions import (
     AgentRunError,
     ModelHTTPError,
-    ModelRetry,
     UnexpectedModelBehavior,
     UsageLimitExceeded,
 )
 from pydantic_ai.models.test import TestModel
-from pydantic_ai.tools import RunContext
-import re
 
-from agents.domain_analyzer_agent import domain_analyzer_agent, generate_domain_analysis, run_domain_analysis
+from agents.domain_analyzer_agent import (
+    domain_analyzer_agent,
+    generate_domain_analysis,
+    run_domain_analysis,
+)
 from schemas.domain_analysis import (
     CertificateInfo,
     DNSSecurityInfo,
@@ -152,6 +154,7 @@ async def test_domain_analyzer_agent_success(mock_test_model):
     assert result.output.email_security.spf_record == "v=spf1 -all"
     assert result.output.email_security.dmarc_policy == "reject"
 
+
 # Check usage (optional but good practice)
 # assert result.usage.total_tokens > 0  # TestModel generates some usage
 # assert result.usage.completion_tokens > 0
@@ -183,8 +186,8 @@ async def test_domain_analyzer_agent_partial_failure():
             },
             "analysis_summary": (
                 "Partial analysis for testdomain.com. IP lookup failed. "
-                "VT report might be incomplete. No certificates found. DNSSEC is not enabled. "
-                "No email security records found."
+                "VT report might be incomplete. No certificates found. "
+                "DNSSEC is not enabled. No email security records found."
             ),
         },
     )
@@ -209,7 +212,7 @@ async def test_domain_analyzer_agent_partial_failure():
     # Check usage (optional but good practice)
     # assert result.usage.total_tokens > 0  # TestModel generates some usage
     # assert result.usage.completion_tokens > 0
-    # assert result.usage.prompt_tokens > 0 
+    # assert result.usage.prompt_tokens > 0
 
 
 # --- Tests for run_domain_analysis wrapper --- #
@@ -223,8 +226,7 @@ async def test_run_domain_analysis_success(mock_agent_run):
     mock_result = AsyncMock(spec=AgentRunResult)
     # Provide all required fields for the mock output
     mock_output = DomainAnalysisResult(
-        domain=MOCK_DOMAIN, 
-        analysis_summary="Minimal summary for test."
+        domain=MOCK_DOMAIN, analysis_summary="Minimal summary for test."
     )
     mock_result.output = mock_output
     mock_agent_run.return_value = mock_result
@@ -244,7 +246,7 @@ async def test_run_domain_analysis_success(mock_agent_run):
 async def test_run_domain_analysis_unexpected_output_type(mock_agent_run, caplog):
     """Test run_domain_analysis when agent returns an unexpected type."""
     mock_result = AsyncMock(spec=AgentRunResult)
-    mock_result.output = "Just a string" # Unexpected type
+    mock_result.output = "Just a string"  # Unexpected type
     mock_agent_run.return_value = mock_result
 
     result = await run_domain_analysis(MOCK_DOMAIN)
@@ -271,7 +273,7 @@ async def test_run_domain_analysis_unexpected_output_type(mock_agent_run, caplog
             "Model HTTP error.*for testdomain.com",
         ),
         (AgentRunError("Test agent run error"), "Agent run error"),
-        (ValueError("Some other error"), "Unexpected error"), # Test generic Exception
+        (ValueError("Some other error"), "Unexpected error"),  # Test generic Exception
     ],
 )
 async def test_run_domain_analysis_exception_handling(
@@ -285,5 +287,6 @@ async def test_run_domain_analysis_exception_handling(
     assert result is None
     mock_agent_run.assert_awaited_once()
     # Use regex search for more flexible log checking
-    assert re.search(log_message, caplog.text), \
-        f"Expected log pattern '{log_message}' not found in logs: {caplog.text}"
+    assert re.search(
+        log_message, caplog.text
+    ), f"Expected log pattern '{log_message}' not found in logs: {caplog.text}"

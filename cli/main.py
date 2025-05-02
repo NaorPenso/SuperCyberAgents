@@ -1,7 +1,7 @@
 """Command Line Interface using Typer."""
 
+import asyncio  # Import asyncio for async command
 import logging
-import asyncio # Import asyncio for async command
 from enum import Enum
 from typing import Optional
 
@@ -9,13 +9,12 @@ import typer
 from dotenv import load_dotenv  # Import dotenv
 from rich import print as rprint
 
+# Import specific agent functions/schemas when adding commands
+from agents.domain_analyzer_agent import run_domain_analysis
+
 # --- Project Imports --- #
 from core.initialization import initialize_system  # Keep initialization
 from observability.logging import setup_logging
-
-# Import specific agent functions/schemas when adding commands
-from agents.domain_analyzer_agent import run_domain_analysis
-from schemas.domain_analysis import DomainAnalysisResult
 
 # Load environment variables from .env file early
 load_dotenv()
@@ -77,6 +76,7 @@ except Exception as e:
 
 # TODO: Add commands for agents as they are implemented.
 
+
 @app.command()
 def info():
     """Display information about the system."""
@@ -107,7 +107,7 @@ def analyze_domain(
     except Exception as e:
         logger.exception(f"Unexpected error during domain analysis: {e}")
         rprint(f"\n:x: [bold red]An unexpected error occurred:[/bold red] {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from e
 
 
 # --- Main Callback (Optional) ---

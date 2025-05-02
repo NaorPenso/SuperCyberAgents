@@ -1,12 +1,13 @@
 """Tests for the Typer CLI application."""
 
 import sys
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
+
+import click  # Import click to catch its exceptions
 
 # Use pytest's monkeypatch
 import pytest
 from typer.testing import CliRunner
-import click # Import click to catch its exceptions
 
 # Don't import app yet, we need to patch first
 from schemas.domain_analysis import DomainAnalysisResult
@@ -99,7 +100,7 @@ def test_cli_initialization_failure(monkeypatch):
         import cli.main  # noqa: F401
 
         import_successful = True
-    except Exception: # pragma: no cover
+    except Exception:  # pragma: no cover
         # This block is hard to trigger reliably if the mock setup works
         import_successful = False
 
@@ -117,9 +118,9 @@ def test_cli_help_exit(patched_cli):
     # Invoke with --help and check exit code and output
     result = runner.invoke(patched_cli["app"], ["--help"])
     assert result.exit_code == 0
-    assert "Usage:" in result.stdout # Check for standard help text
-    assert "analyze-domain" in result.stdout # Check command is listed
-    assert "--log-level" in result.stdout # Check for a specific option
+    assert "Usage:" in result.stdout  # Check for standard help text
+    assert "analyze-domain" in result.stdout  # Check command is listed
+    assert "--log-level" in result.stdout  # Check for a specific option
 
 
 # --- Tests for analyze-domain command ---
@@ -128,12 +129,15 @@ TEST_DOMAIN = "example-cli.com"
 
 # Use pytest.mark.asyncio for these tests
 
+
 @pytest.mark.asyncio
-@patch("cli.main.run_domain_analysis") # Keep the patch simple
+@patch("cli.main.run_domain_analysis")  # Keep the patch simple
 async def test_cli_analyze_domain_success(mock_run_analysis, patched_cli, capsys):
-    """Test the analyze-domain command successfully runs the agent (direct async call)."""
+    """Test analyze-domain command runs successfully (direct async call)."""
     # Mock the agent runner to return a successful result
-    mock_result_obj = DomainAnalysisResult(domain=TEST_DOMAIN, analysis_summary="Success!")
+    mock_result_obj = DomainAnalysisResult(
+        domain=TEST_DOMAIN, analysis_summary="Success!"
+    )
     mock_run_analysis.return_value = mock_result_obj
 
     # Import the command function directly
@@ -148,6 +152,7 @@ async def test_cli_analyze_domain_success(mock_run_analysis, patched_cli, capsys
     assert "Analysis Complete:" in captured.out
     assert mock_result_obj.model_dump_json(indent=2) in captured.out
 
+
 @pytest.mark.asyncio
 @patch("cli.main.run_domain_analysis")
 async def test_cli_analyze_domain_failure(mock_run_analysis, patched_cli, capsys):
@@ -161,11 +166,12 @@ async def test_cli_analyze_domain_failure(mock_run_analysis, patched_cli, capsys
     with pytest.raises(click.exceptions.Exit) as excinfo:
         await analyze_domain(domain=TEST_DOMAIN)
 
-    assert excinfo.value.exit_code == 1 # Check click exception's exit_code
+    assert excinfo.value.exit_code == 1  # Check click exception's exit_code
     mock_run_analysis.assert_awaited_once_with(TEST_DOMAIN)
     captured = capsys.readouterr()
     assert "Analysis Failed." in captured.out
     assert "Could not retrieve analysis results" in captured.out
+
 
 @pytest.mark.asyncio
 @patch("cli.main.run_domain_analysis")
@@ -181,7 +187,7 @@ async def test_cli_analyze_domain_exception(mock_run_analysis, patched_cli, caps
     with pytest.raises(click.exceptions.Exit) as excinfo:
         await analyze_domain(domain=TEST_DOMAIN)
 
-    assert excinfo.value.exit_code == 1 # Check click exception's exit_code
+    assert excinfo.value.exit_code == 1  # Check click exception's exit_code
     mock_run_analysis.assert_awaited_once_with(TEST_DOMAIN)
     captured = capsys.readouterr()
     assert "An unexpected error occurred:" in captured.out

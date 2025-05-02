@@ -1,5 +1,6 @@
 """Pydantic-AI Agent for performing comprehensive domain analysis."""
 
+import asyncio
 import logging
 import os
 from typing import Any, Type
@@ -8,8 +9,9 @@ from dotenv import load_dotenv
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import (
     # Model didn't behave as expected
+    # Specific HTTP errors from model provider
     AgentRunError,  # Base class for agent run issues
-    ModelHTTPError,  # Specific HTTP errors from model provider
+    ModelHTTPError,
     UnexpectedModelBehavior,
     UsageLimitExceeded,
 )
@@ -204,13 +206,10 @@ async def run_domain_analysis(domain_to_analyze: str) -> DomainAnalysisResult | 
 
 
 # Example of how to run it (e.g., for local testing)
-import asyncio # pragma: no cover
-
-if __name__ == "__main__": # pragma: no cover
-    test_domain = "google.com" # Or get from command line args
+if __name__ == "__main__":  # pragma: no cover
+    test_domain = "google.com"  # Or get from command line args
     analysis = asyncio.run(run_domain_analysis(test_domain))
     if analysis:
-        print("\n--- Analysis Results ---")
-        print(analysis.model_dump_json(indent=2))
+        pass
     else:
-        print(f"\nFailed to get analysis results for {test_domain}")
+        pass
