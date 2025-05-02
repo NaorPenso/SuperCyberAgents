@@ -263,13 +263,6 @@ Always refer to the `pyproject.toml` for the specific Ruff configuration, includ
 
 *   **Line Length (E501):** **Strictly enforce a maximum line length of 88 characters.** Never generate or suggest code exceeding this limit.
 
-### Core Flake8 Violations to Enforce (Non-Exhaustive):
-
-Actively check for and prevent **all** violations reported by the configured linters (Ruff). This includes, but is not limited to:
-
-*   **Pycodestyle Errors (E***) and Warnings (W***):** Enforce PEP 8 style regarding indentation, whitespace, blank lines, imports, line length (max 88 chars), and statements (e.g., avoid `E722` bare `except:`).
-*   **Pyflakes Errors (F***):** Prevent logical errors like unused imports (`F401`), undefined names (`F821`), unused variables (`F841`), issues with control flow (`F7xx`), and incorrect syntax/runtime issues (`F5xx-F9xx`).
-*   **McCabe Complexity (C901):** Generate and refactor code to stay below the complexity threshold defined in `pyproject.toml`. Break down complex logic into smaller functions.
 
 ### Handling Rule Violations (`# noqa`):
 

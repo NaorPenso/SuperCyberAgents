@@ -113,8 +113,11 @@ def setup_logging(log_level_arg: str | None = None):
     # --- Formatter --- #
     # Consistent JSON formatter (assuming formatter defined above or keeping existing)
     formatter = logging.Formatter(
-        fmt='{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}',
-        datefmt="%Y-%m-%d %H:%M:%S,%f"[:-3],
+        fmt=(
+            '{"timestamp": "%(asctime)s", "level": "%(levelname)s", '
+            '"logger": "%(name)s", "message": "%(message)s"}'
+        ),
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
     )
 
     # --- Handlers --- #
@@ -125,7 +128,9 @@ def setup_logging(log_level_arg: str | None = None):
 
     # 2. Rotating File Handler (DEBUG level - unchanged)
     file_handler = RotatingFileHandler(
-        log_file_path_obj, maxBytes=10 * 1024 * 1024, backupCount=5  # 10 MB
+        log_file_path_obj,
+        maxBytes=10 * 1024 * 1024,
+        backupCount=5,  # 10 MB
     )
     file_handler.setLevel(logging.DEBUG)  # Always capture DEBUG in file
     file_handler.setFormatter(formatter)
@@ -136,7 +141,8 @@ def setup_logging(log_level_arg: str | None = None):
 
     # Log confirmation *after* handlers are added
     root_logger.info(
-        f"Logging setup complete. Console Level: {log_level_str} ({log_level_int}), File Level: DEBUG"
+        f"Logging setup complete. Console Level: {log_level_str} ({log_level_int}), "
+        f"File Level: DEBUG"
     )
 
     # Adjust log levels for noisy libraries if needed

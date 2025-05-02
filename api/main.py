@@ -1,4 +1,4 @@
-"""Main FastAPI application entrypoint."""
+"""Initializes the FastAPI application and includes agent routers."""
 
 import logging
 from contextlib import asynccontextmanager
