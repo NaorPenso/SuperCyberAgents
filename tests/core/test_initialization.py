@@ -24,8 +24,8 @@ def test_initialize_system_first_call(caplog):
     initialization.initialize_system()
 
     assert initialization._INITIALIZED is True
-    assert "Initializing system components..." in caplog.text
-    assert "System initialization complete" in caplog.text
+    assert "Running system initialization checks..." in caplog.text
+    assert "System initialization checks complete." in caplog.text
 
 
 def test_initialize_system_subsequent_calls(caplog):
@@ -40,8 +40,8 @@ def test_initialize_system_subsequent_calls(caplog):
     # Second call
     initialization.initialize_system()
     assert initialization._INITIALIZED is True  # Should still be true
-    assert "System already initialized." in caplog.text
-    assert "Initializing system components..." not in caplog.text
+    assert "Initialization function already called." in caplog.text
+    assert "Running system initialization checks..." not in caplog.text
 
 
 def test_initialize_system_exception_handling(monkeypatch, caplog):
@@ -68,3 +68,24 @@ def test_initialize_system_exception_handling(monkeypatch, caplog):
     # Removing direct check on caplog.text as it might be unreliable with pytest.raises
     # assert "System initialization failed." in caplog.text
     assert "System initialization complete" not in caplog.text
+
+
+@patch("core.initialization.logger.info")
+def test_initialize_system_logs_failure_on_exception(mock_logger_info, caplog):
+    """Test initialize_system logs failure and re-raises the exception."""
+    caplog.set_level(logging.ERROR)
+    mock_error = Exception("Mock internal error")
+    # Make the second call to logger.info raise the error
+    mock_logger_info.side_effect = [None, mock_error]
+
+    # Assert that the expected exception is raised
+    with pytest.raises(Exception) as excinfo:
+        initialization.initialize_system()
+
+    assert excinfo.value is mock_error # Check it's the same exception we raised
+    assert initialization._INITIALIZED is False # Should be reset on error
+    assert "System initialization check failed." in caplog.text # Updated log message
+    mock_logger_info.assert_called() # Ensure logger.info was attempted
+
+# This test is slightly different, testing if the whole function raises
+# if the exception isn't caught internally as expected.

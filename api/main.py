@@ -67,6 +67,6 @@ async def read_root():
 
 
 # Example of how to run (if needed for local dev)
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+if __name__ == "__main__": # pragma: no cover
+    import uvicorn # pragma: no cover
+    uvicorn.run(app, host="0.0.0.0", port=8000)

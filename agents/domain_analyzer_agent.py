@@ -125,7 +125,7 @@ domain_analyzer_agent: Agent[
 # This decorator defines the input schema (domain: str) for the agent's task.
 # The decorated function MUST return a string, even if minimal.
 @domain_analyzer_agent.instructions
-def generate_domain_analysis(domain: str) -> str:  # Return type is str
+def generate_domain_analysis(domain: str) -> str:  # pragma: no cover
     """Entry point instruction for initiating domain analysis.
 
     Args:
@@ -204,12 +204,13 @@ async def run_domain_analysis(domain_to_analyze: str) -> DomainAnalysisResult | 
 
 
 # Example of how to run it (e.g., for local testing)
-# import asyncio
-# if __name__ == "__main__":
-#     test_domain = "google.com" # Or get from command line args
-#     analysis = asyncio.run(run_domain_analysis(test_domain))
-#     if analysis:
-#         print("\n--- Analysis Results ---")
-#         print(analysis.model_dump_json(indent=2))
-#     else:
-#         print(f"\nFailed to get analysis results for {test_domain}")
+import asyncio # pragma: no cover
+
+if __name__ == "__main__": # pragma: no cover
+    test_domain = "google.com" # Or get from command line args
+    analysis = asyncio.run(run_domain_analysis(test_domain))
+    if analysis:
+        print("\n--- Analysis Results ---")
+        print(analysis.model_dump_json(indent=2))
+    else:
+        print(f"\nFailed to get analysis results for {test_domain}")

@@ -1,6 +1,7 @@
 """Command Line Interface using Typer."""
 
 import logging
+import asyncio # Import asyncio for async command
 from enum import Enum
 from typing import Optional
 
@@ -13,7 +14,8 @@ from core.initialization import initialize_system  # Keep initialization
 from observability.logging import setup_logging
 
 # Import specific agent functions/schemas when adding commands
-# Example: from agents.log_analyzer_agent import analyze_log_entry, ExampleAgentInput
+from agents.domain_analyzer_agent import run_domain_analysis
+from schemas.domain_analysis import DomainAnalysisResult
 
 # Load environment variables from .env file early
 load_dotenv()
@@ -75,7 +77,6 @@ except Exception as e:
 
 # TODO: Add commands for agents as they are implemented.
 
-
 @app.command()
 def info():
     """Display information about the system."""
@@ -83,6 +84,30 @@ def info():
     rprint("A command-line interface for interacting with Pydantic-AI agents.")
     rprint("\nUse [bold]--help[/bold] for available commands and options.")
     return 0  # Ensure successful exit code
+
+
+@app.command()
+def analyze_domain(
+    domain: str = typer.Argument(..., help="The domain name to analyze.")
+):
+    """Run the Domain Analyzer agent for a specific domain."""
+    rprint(f":mag: Running Domain Analysis for: [bold blue]{domain}[/bold blue]")
+
+    try:
+        # Use asyncio.run to execute the async domain analysis function
+        result = asyncio.run(run_domain_analysis(domain))
+
+        if result:
+            rprint("\n:white_check_mark: [bold green]Analysis Complete:[/bold green]")
+            rprint(result.model_dump_json(indent=2))
+        else:
+            rprint("\n:x: [bold red]Analysis Failed.[/bold red]")
+            rprint("Could not retrieve analysis results. Check logs for details.")
+            raise typer.Exit(code=1)
+    except Exception as e:
+        logger.exception(f"Unexpected error during domain analysis: {e}")
+        rprint(f"\n:x: [bold red]An unexpected error occurred:[/bold red] {e}")
+        raise typer.Exit(code=1)
 
 
 # --- Main Callback (Optional) ---
@@ -103,6 +128,18 @@ def main_callback(
     pass
 
 
-# --- Run Dunder Check (Optional) ---
-# if __name__ == "__main__":
-#    app() # Allows running the CLI script directly
+# --- How to Run --- #
+# This CLI is intended to be run using the `typer` command runner
+# or via a configured script entry point in pyproject.toml.
+# Example using typer runner:
+# poetry run typer cli/main.py run analyze-domain example.com
+#
+# Example using script entry point (if configured as 'cyberagents'):
+# poetry run cyberagents analyze-domain example.com
+#
+# Direct execution (`python cli/main.py ...`) is not recommended for
+# applications with async commands as it may not handle the event loop correctly.
+
+# Add entry point for direct execution
+if __name__ == "__main__":
+    app()
