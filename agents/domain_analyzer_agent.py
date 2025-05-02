@@ -7,9 +7,7 @@ from typing import Any, Type
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent
-from pydantic_ai.exceptions import (
-    # Model didn't behave as expected
-    # Specific HTTP errors from model provider
+from pydantic_ai.exceptions import (  # Model didn't behave as expected; Specific HTTP errors from model provider
     AgentRunError,  # Base class for agent run issues
     ModelHTTPError,
     UnexpectedModelBehavior,

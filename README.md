@@ -5,6 +5,7 @@ A modern cybersecurity toolkit built with Pydantic-AI that provides specialized 
 ## Key Features
 
 - **Domain Analysis Agent:** Performs comprehensive security analysis of domains, examining certificates, DNS configuration, email security, IP information, Shodan data, and VirusTotal threat analysis.
+- **Network Security Agent:** Scans networks, endpoints, and servers for vulnerabilities using Nuclei from ProjectDiscovery.
 - **High Test Coverage:** Maintains >95% test coverage to ensure reliability
 - **Modern Architecture:** Built on Pydantic-AI for type-safe agent development
 - **API and CLI Interfaces:** Interact with agents through a FastAPI server or command-line interface
@@ -62,6 +63,12 @@ Run domain analysis:
 poetry run python -m typer cli.main run analyze-domain example.com
 ```
 
+Run network security scan:
+
+```bash
+poetry run python -m typer cli.main run scan-target example.com --severity high
+```
+
 Get system information:
 
 ```bash
@@ -109,6 +116,30 @@ This returns information about:
 - Email security (SPF, DMARC)
 - Shodan scan results
 - VirusTotal threat analysis
+
+### Network Security Scanning
+
+The `scan-target` command scans a target (URL, domain, or IP) for security vulnerabilities:
+
+```bash
+# Basic scan
+poetry run python -m typer cli.main run scan-target example.com
+
+# Filter by severity (only show high and critical findings)
+poetry run python -m typer cli.main run scan-target example.com --severity high
+
+# Use domain analysis information for enhanced context
+poetry run python -m typer cli.main run scan-target example.com --use-domain-info
+
+# Save results to a JSON file
+poetry run python -m typer cli.main run scan-target example.com --output results.json
+```
+
+This performs a comprehensive security scan using Nuclei and provides:
+- Vulnerability findings with severity, descriptions, and remediation steps
+- CVE IDs and reference links
+- Summary of findings by severity
+- Actionable recommendations prioritized by risk
 
 ## Contributing
 
