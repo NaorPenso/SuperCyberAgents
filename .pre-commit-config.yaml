@@ -1,0 +1,12 @@
+# See https://pre-commit.com for more information
+# See https://docs.astral.sh/ruff/integrations/#pre-commit for Ruff specifics
+repos:
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version should be kept in sync with pyproject.toml
+    rev: v0.5.0 # Match the version in pyproject.toml
+    hooks:
+    # Run the formatter.
+    -   id: ruff-format
+    # Run the linter.
+    -   id: ruff
+        args: [--fix] # Enable auto-fix for linting errors 

@@ -1,5 +1,4 @@
-"""Expose schema registry and registration decorator."""
+"""Schemas package for Pydantic models."""
 
-from .registry import SCHEMA_REGISTRY, register_schema
-
-__all__ = ["SCHEMA_REGISTRY", "register_schema"]
+# This file is intentionally left sparse after removing the old registry.
+# Schemas are defined in submodules like agent_schemas.py, tool_schemas.py, etc.

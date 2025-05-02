@@ -1,13 +1,56 @@
-"""Pydantic schemas for the SecurityManagerAgent."""
+"""Pydantic schemas for the Security Manager Agent."""
 
+from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from schemas import register_schema
+
+class ThreatLevel(str, Enum):
+    """Enum for threat levels."""
+
+    NONE = "none"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
 
 
-@register_schema("SecurityManagerInput")
+class MonitorSpec(BaseModel):
+    """Specification for what the Security Manager should monitor."""
+
+    monitor_type: str = Field(
+        ..., description="Type of monitoring (e.g., 'log', 'network')"
+    )
+    config: Dict[str, Any] = Field(
+        ..., description="Configuration specific to the monitor type"
+    )
+
+
+class AnalysisRequest(BaseModel):
+    """Input schema for requesting analysis from the Security Manager."""
+
+    request_id: str = Field(..., description="Unique identifier for this request.")
+    spec: MonitorSpec = Field(..., description="The monitoring specification.")
+    context_data: Optional[Dict[str, Any]] = Field(
+        None, description="Optional additional context for the analysis."
+    )
+
+
+class AnalysisResult(BaseModel):
+    """Output schema for the analysis result from the Security Manager."""
+
+    request_id: str = Field(..., description="The ID of the original analysis request.")
+    threat_level: ThreatLevel = Field(..., description="Overall assessed threat level.")
+    summary: str = Field(..., description="A concise summary of the analysis findings.")
+    details: List[Dict[str, Any]] = Field(
+        default_factory=list, description="List of detailed findings or evidence."
+    )
+    recommended_actions: Optional[List[str]] = Field(
+        None, description="Optional list of recommended actions."
+    )
+
+
 class SecurityManagerInput(BaseModel):
     """Input schema for the SecurityManagerAgent."""
 
@@ -38,7 +81,6 @@ class DelegatedTaskResult(BaseModel):
     )
 
 
-@register_schema("SecurityManagerOutput")
 class SecurityManagerOutput(BaseModel):
     """Output schema for the SecurityManagerAgent."""
 

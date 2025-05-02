@@ -2,10 +2,7 @@
 
 from pydantic import BaseModel, Field
 
-from schemas import register_schema  # Import the decorator
 
-
-@register_schema("TemplateToolInput")  # Register with class name
 class TemplateToolInput(BaseModel):
     """Input schema for the Template Tool."""
 
@@ -14,7 +11,6 @@ class TemplateToolInput(BaseModel):
     error: str | None = Field(None, description="Error message if execution failed.")
 
 
-@register_schema("TemplateToolOutput")  # Register with class name
 class TemplateToolOutput(BaseModel):
     """Output schema for the Template Tool."""
 

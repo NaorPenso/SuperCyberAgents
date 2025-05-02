@@ -5,17 +5,13 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-from schemas import register_schema
 
-
-@register_schema("WhoisLookupInput")
 class WhoisLookupInput(BaseModel):
     """Input schema for the WhoisLookupTool."""
 
     domain: str = Field(..., description="The domain name to look up.")
 
 
-@register_schema("WhoisLookupOutput")
 class WhoisLookupOutput(BaseModel):
     """Output schema for the WhoisLookupTool.
 

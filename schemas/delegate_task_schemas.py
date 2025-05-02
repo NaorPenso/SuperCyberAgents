@@ -4,10 +4,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
-from schemas import register_schema
 
-
-@register_schema("DelegateTaskInput")
 class DelegateTaskInput(BaseModel):
     """Input schema for delegating a task to another agent."""
 
@@ -16,11 +13,13 @@ class DelegateTaskInput(BaseModel):
     )
     agent_input: Dict[str, Any] = Field(
         ...,
-        description="The input data (as a dictionary) to be passed to the target agent's run method.",
+        description=(
+            "The input data (as a dictionary) to be passed to the target "
+            "agent's run method."
+        ),
     )
 
 
-@register_schema("DelegateTaskOutput")
 class DelegateTaskOutput(BaseModel):
     """Output schema for the result of a delegated task."""
 
@@ -32,7 +31,10 @@ class DelegateTaskOutput(BaseModel):
     )
     result: Optional[Dict[str, Any]] = Field(
         None,
-        description="The structured output (as a dictionary) from the delegate agent, if successful.",
+        description=(
+            "The structured output (as a dictionary) from the delegate agent, "
+            "if successful."
+        ),
     )
     error_message: Optional[str] = Field(
         None, description="Error message if delegation or agent execution failed."

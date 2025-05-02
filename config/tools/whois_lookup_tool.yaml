@@ -1,6 +1,0 @@
-# Configuration for WhoisLookupTool
-name: "whois_lookup_tool"
-description: "Performs a WHOIS lookup for a given domain name."
-# No tool-specific config needed for this implementation
-input_schema: "WhoisLookupInput"
-output_schema: "WhoisLookupOutput" 

@@ -32,6 +32,10 @@ python-whois = "^0.9.5"
 json-repair = "^0.24.0"
 pydantic-settings = "^2.3.4"
 rich = "^13.9.4"
+httpx = "^0.27.0" # Added for API calls
+shodan = "^1.31.0"
+dnspython = "^2.7.0"
+ipwhois = "^1.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
@@ -44,9 +48,6 @@ bandit = "^1.7.9"
 yamllint = "^1.35.1"
 types-pyyaml = "^6.0.12.12"
 types-requests = "^2.32.0.20240622"
-httpx = "^0.27.0" # For FastAPI TestClient
-black = "^25.1.0"
-isort = "^6.0.1"
 
 [tool.poetry.extras]
 aws = ["boto3"]
@@ -57,7 +58,7 @@ line-length = 88
 [tool.ruff.lint]
 # Define rules to select and ignore here
 select = ["E", "F", "W", "C90", "I", "N", "UP", "B", "A", "DTZ", "T10", "T20", "Q", "RUF"]
-ignore = ["E501", "I001"] # Ignore line length & import sorting errors
+ignore = [] # Explicitly empty ignore list
 
 [tool.ruff.format]
 quote-style = "double"
@@ -88,15 +89,3 @@ skips = ["B101"] # Example: skip assert_used if needed for tests
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-exclude = '''
-/(
-  | \.github
-  | \.venv
-  | \.git
-)/
-'''
-
-[tool.isort]
-skip_glob = [".cursor/*", ".github/*",".venv/*",".git/*"]
