@@ -5,37 +5,49 @@
 
 ## Related Issues
 
-<!-- Link any relevant issues, tickets, or tasks. Use keywords like "Fixes #123" or "Resolves #456" to automatically close issues upon merge. -->
-- Closes #issue_number (if applicable)
+<!-- Link any relevant issues that this PR addresses. -->
+<!-- Use keywords like "Fixes #123" or "Closes #456" to automatically close issues upon merging. -->
+
+- Fixes: #
 
 ## Changes Made
 
-<!-- List the specific changes made in this PR. Be detailed enough for reviewers to understand the scope. -->
-- Change 1
-- Change 2
-- ...
+<!-- List the key changes made in this PR. -->
 
-## Testing Done
+- 
+- 
+- 
 
-<!-- Describe the testing you have performed to ensure the changes work correctly and don't introduce regressions. -->
-- [ ] Unit tests added/updated for new logic.
-- [ ] Integration tests performed (if applicable).
-- [ ] Manual testing steps described below (if necessary):
-  1. Step 1
-  2. Step 2
+## Testing
 
-## Checklist
+<!-- Describe the testing performed to ensure the changes work correctly. -->
+<!-- Mention any new tests added or existing tests updated. -->
 
-<!-- Ensure the following tasks are completed before merging. -->
-- [ ] Code follows project coding standards (`ruff`, `black`, `isort`).
-- [ ] Tests pass locally (`poetry run pytest`).
-- [ ] Documentation updated (if required).
-- [ ] Commit messages are clear and descriptive.
+- [ ] All automated tests pass (`poetry run pytest`).
+- [ ] Manual testing performed (if applicable, describe steps).
 
-## Screenshots/GIFs (Optional)
+## Conformance Checklist (Pydantic-AI Constitution)
 
-<!-- If applicable, add screenshots or GIFs to demonstrate the changes visually. -->
+<!-- Verify adherence to the project's constitution. -->
 
-## Additional Notes (Optional)
+- [ ] Code uses `pydantic_ai.Agent` where appropriate.
+- [ ] Type hints and Pydantic models are used correctly.
+- [ ] Asynchronous operations (`async def`) are used for I/O.
+- [ ] Code follows naming conventions (snake_case, PascalCase).
+- [ ] Code passes Ruff linting and formatting checks (`poetry run ruff check .`, `poetry run ruff format .`).
+- [ ] New tests are added for new functionality.
+- [ ] Test coverage meets or exceeds project requirements (currently aiming for >95%).
+- [ ] Agent prompts/instructions are clear and follow workflow guidelines.
+- [ ] Tool definitions are clear, with appropriate schemas and error handling.
 
-<!-- Any other context or information relevant to this PR. --> 
+## Documentation Updates
+
+<!-- Describe any necessary updates to READMEs, docstrings, or other documentation. -->
+
+- [ ] Docstrings updated for new/modified functions/classes.
+- [ ] README updated (if applicable).
+- [ ] No documentation updates needed.
+
+## Additional Notes
+
+<!-- Add any other relevant information, context, or considerations for the reviewer. --> 

@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """Pydantic-AI Agent for performing comprehensive domain analysis."""
 
 import asyncio
@@ -5,9 +6,11 @@ import logging
 import os
 from typing import Any, Type
 
+# --- Python Standard Library --- #
+# --- Third Party Imports --- #
 from dotenv import load_dotenv
 from pydantic_ai import Agent
-from pydantic_ai.exceptions import (  # Model didn't behave as expected; Specific HTTP errors from model provider
+from pydantic_ai.exceptions import (  # Model didn't behave as expected;; Specific HTTP errors from model provider;; Catch-all for unexpected LLM issues
     AgentRunError,  # Base class for agent run issues
     ModelHTTPError,
     UnexpectedModelBehavior,
@@ -30,6 +33,54 @@ from tools.domain_tools import (
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+# fmt: off
+DOMAIN_ANALYSIS_SYSTEM_PROMPT = """You are a Domain Analysis Agent.
+ Your goal is to perform a comprehensive security and configuration analysis
+ for a given domain. Follow these steps using the available tools:
+
+1.  **IP Information:** Use the `ipwhois_lookup` tool to find the primary IP
+    address associated with the domain and retrieve its WHOIS information (ASN,
+    country, description).
+2.  **Shodan Scan (If IP Found):** If an IP address was successfully resolved in step 1,
+    use the `shodan_host_lookup` tool with that IP address to gather
+    information about open ports, services, OS, organization, and potential
+    vulnerabilities. **If step 1 failed to find an IP, skip this step.**
+3.  **VirusTotal URL Check:** Use the `virustotal_url_analysis` tool with the
+    original domain name to check its reputation and threat score based on the
+    latest analysis report.
+4.  **Certificate Analysis:** Use the `crt_sh_lookup` tool to find relevant
+    SSL/TLS certificates associated with the domain. Extract key details like
+    issuer, common names, and validity period for each certificate found.
+5.  **DNS Security:** Use the `dns_security_check` tool to determine if DNSSEC
+    is enabled and properly configured for the domain.
+6.  **Email Security:** Use the `email_security_check` tool to retrieve and
+    evaluate the domain's SPF and DMARC records. Determine the DMARC policy.
+7.  **Synthesize Results:** Compile all collected information (IP details, Shodan
+    scan results, VirusTotal analysis, certificate list, DNS security status,
+    email security status) into the `DomainAnalysisResult` structure. Ensure the
+    `shodan_info` and `vt_analysis` fields are populated if the respective scans
+    were performed and returned data.
+8.  **Summarize:** Based on the gathered data, write a concise
+    `analysis_summary` highlighting the key findings, potential risks (including
+    any high threat scores from VirusTotal or vulnerabilities from Shodan), or
+    notable configurations for the domain.
+
+Ensure all fields in the `DomainAnalysisResult` are populated accurately based
+on the tool outputs. If a tool fails or returns no data for a section, reflect
+that appropriately in the output (e.g., leaving optional fields as null or
+noting the lack of data in the summary).
+
+**Error Handling:** If any tool fails during execution (e.g., API error, timeout,
+no data found), make a best effort to continue with the other steps. Note any
+tool failures or lack of data for specific sections clearly in the final
+`analysis_summary`.
+
+**Consistency Check:** If results from different tools seem contradictory (e.g.,
+VirusTotal clean, Shodan shows CVEs), briefly mention this potential discrepancy
+in the `analysis_summary`.
+"""
+# fmt: on
 
 # --- Configuration --- #
 # Determine the LLM model string based on environment variables
@@ -62,42 +113,8 @@ else:
 
 # --- Agent Definition --- #
 
-# Define the detailed steps for the system prompt
-DOMAIN_ANALYSIS_SYSTEM_PROMPT = """You are a Domain Analysis Agent.
- Your goal is to perform a comprehensive security and configuration analysis
- for a given domain. Follow these steps using the available tools:
-
-1.  **IP Information:** Use the `ipwhois_lookup` tool to find the primary IP
-    address associated with the domain and retrieve its WHOIS information (ASN,
-    country, description).
-2.  **Shodan Scan (If IP Found):** If an IP address was successfully resolved in the
-    previous step, use the `shodan_host_lookup` tool with that IP address to gather
-    information about open ports, services, OS, organization, and potential
-    vulnerabilities.
-3.  **VirusTotal URL Check:** Use the `virustotal_url_analysis` tool with the
-    original domain name to check its reputation and threat score based on the
-    latest analysis report.
-4.  **Certificate Analysis:** Use the `crt_sh_lookup` tool to find relevant
-    SSL/TLS certificates associated with the domain. Extract key details like
-    issuer, common names, and validity period for each certificate found.
-5.  **DNS Security:** Use the `dns_security_check` tool to determine if DNSSEC
-    is enabled and properly configured for the domain.
-6.  **Email Security:** Use the `email_security_check` tool to retrieve and
-    evaluate the domain's SPF and DMARC records. Determine the DMARC policy.
-7.  **Synthesize Results:** Compile all collected information (IP details, Shodan
-    scan results, VirusTotal analysis, certificate list, DNS security status,
-    email security status) into the `DomainAnalysisResult` structure. Ensure the
-    `shodan_info` and `vt_analysis` fields are populated if the respective scans
-    were performed and returned data.
-8.  **Summarize:** Based on the gathered data, write a concise
-    `analysis_summary` highlighting the key findings, potential risks (including
-    any high threat scores from VirusTotal or vulnerabilities from Shodan), or
-    notable configurations for the domain.
-
-Ensure all fields in the `DomainAnalysisResult` are populated accurately based
-on the tool outputs. If a tool fails or returns no data for a section, reflect
-that appropriately in the output (e.g., leaving optional fields as null or
-noting the lack of data in the summary)."""
+# Define the detailed steps for the system prompt - MOVED TO CONSTANT ABOVE
+# DOMAIN_ANALYSIS_SYSTEM_PROMPT = """ ... """
 
 logger.info(f"Initializing DomainAnalyzerAgent with model: {llm_model_string}")
 
@@ -108,7 +125,7 @@ domain_analyzer_agent: Agent[
 ] = Agent(
     model=llm_model_string,  # Use the constructed model string
     output_type=DomainAnalysisResult,
-    system_prompt=DOMAIN_ANALYSIS_SYSTEM_PROMPT,  # Added system prompt
+    system_prompt=DOMAIN_ANALYSIS_SYSTEM_PROMPT,  # Use the constant
     # Register tools directly. Pydantic-AI infers schema from type hints & docstrings.
     tools=[
         crt_sh_lookup,

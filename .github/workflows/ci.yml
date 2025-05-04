@@ -1,0 +1,54 @@
+name: Python CI Checks
+
+on:
+  push:
+    branches: [ main ] # Or your default branch
+  pull_request:
+    branches: [ main ] # Or your default branch
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12'] # Test against relevant Python versions
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true # Optional: Keep venv in project folder
+
+    - name: Install dependencies
+      run: poetry install --no-interaction --no-ansi
+
+    - name: Run Ruff Linter
+      run: poetry run ruff check .
+
+    - name: Run Ruff Formatter Check
+      run: poetry run ruff format --check .
+
+    - name: Run Pytest with Coverage
+      run: poetry run pytest --cov=. --cov-report=xml
+
+    # Optional: Check coverage threshold (adjust percentage as needed)
+    # - name: Check Coverage Threshold
+    #   run: |
+    #     poetry install --extras test # Ensure coverage package is installed
+    #     poetry run coverage report --fail-under=95 # Example: Fail if under 95%
+
+    # Optional: Upload coverage report (e.g., to Codecov)
+    # - name: Upload coverage reports to Codecov
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     token: ${{ secrets.CODECOV_TOKEN }} # Add CODECOV_TOKEN to repo secrets
+    #     slug: your-github-username/your-repo-name # Optional: if repo detection fails 

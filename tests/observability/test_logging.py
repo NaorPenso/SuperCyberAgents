@@ -34,7 +34,6 @@ def mock_logging_setup():
     ), patch("logging.StreamHandler", return_value=mock_console_handler), patch(
         "logging.getLogger"
     ) as mock_get_logger:
-
         # Set up mock logger
         mock_logger = MagicMock()
         mock_logger.hasHandlers.return_value = False

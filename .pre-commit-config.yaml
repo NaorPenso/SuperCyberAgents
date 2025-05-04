@@ -9,4 +9,4 @@ repos:
     -   id: ruff-format
     # Run the linter.
     -   id: ruff
-        args: [--fix] # Enable auto-fix for linting errors 
+        args: [--fix --unsafe-fixes] # Enable auto-fix for linting errors 

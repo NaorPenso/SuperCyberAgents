@@ -5,21 +5,18 @@ Placeholder - endpoints will be added as agents are implemented.
 
 import logging
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Annotated, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from pydantic import BaseModel, Field
 
-from agents.domain_analyzer_agent import domain_analyzer_agent
-from agents.network_security_agent import (
-    NetworkScanResult,
-    ScanSeverity,
-    network_security_agent,
-)
+from agents.domain_analyzer_agent import DomainAnalysisResult, run_domain_analysis
+from agents.network_security_agent import NetworkScanResult, ScanSeverity, scan_target
+from core.utils import extract_domain
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/agents", tags=["Agents"])
 
 # TODO: Add endpoints for Pydantic-AI agents as they are created.
 
@@ -33,8 +30,8 @@ class DomainAnalysisRequest(BaseModel):
 
     domain: str = Field(..., description="Domain to analyze")
     include_subdomains: bool = Field(False, description="Include subdomain analysis")
-    include_whois: bool = Field(True, description="Include WHOIS information")
-    include_dns: bool = Field(True, description="Include DNS records")
+    include_whois: bool = Field(False, description="Include WHOIS information")
+    include_dns: bool = Field(False, description="Include DNS records")
 
 
 class DomainAnalysisResponse(BaseModel):
@@ -46,100 +43,137 @@ class DomainAnalysisResponse(BaseModel):
     results: Dict = Field(..., description="Analysis results")
 
 
-@router.post(
-    "/analyze-domain",
-    response_model=DomainAnalysisResponse,
-    description="Analyze a domain for cybersecurity insights",
-)
-async def analyze_domain(request: DomainAnalysisRequest):
-    """Analyze a domain using the DomainAnalyzerAgent."""
+@router.post("/analyze-domain", response_model=DomainAnalysisResult)
+async def analyze_domain_endpoint(
+    request: Annotated[DomainAnalysisRequest, Body()],
+) -> DomainAnalysisResult:
+    """Analyze a domain using the Domain Analyzer Agent."""
     try:
-        result = await domain_analyzer_agent.analyze_domain(
-            request.domain,
-            include_subdomains=request.include_subdomains,
-            include_whois=request.include_whois,
-            include_dns=request.include_dns,
+        logger.info(
+            f"Received request to analyze domain: {request.domain} "
+            f"with options: subdomains={request.include_subdomains}, "
+            f"whois={request.include_whois}, dns={request.include_dns}"
         )
-
-        return DomainAnalysisResponse(
-            domain=request.domain,
-            analysis_id=result.analysis_id,
-            timestamp=result.timestamp,
-            results=result.model_dump(exclude={"analysis_id", "timestamp"}),
+        # Call the standalone wrapper function
+        analysis_result = await run_domain_analysis(
+            domain_to_analyze=request.domain
+            # TODO: Consider how to pass include_* flags if needed by the agent logic
+            # Currently run_domain_analysis only takes the domain.
+            # If the agent prompt/tools need these, run_domain_analysis needs update.
         )
+        if analysis_result:
+            logger.info(f"Successfully analyzed domain: {request.domain}")
+            return analysis_result
+        else:
+            logger.error(f"Domain analysis failed for {request.domain}")
+            raise HTTPException(
+                status_code=500,
+                detail="Domain analysis failed or returned no result.",
+            )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error analyzing domain: {e!s}")
+        logger.exception(f"Error during domain analysis for {request.domain}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error analyzing domain: {e!s}"
+        ) from e
 
 
-class NetworkScanRequest(BaseModel):
-    """Request model for network security scanning."""
-
-    target: str = Field(..., description="Target URL, domain, or IP to scan")
-    severity_filter: Optional[ScanSeverity] = Field(
-        None, description="Only include vulnerabilities of this severity and higher"
-    )
-    rate_limit: int = Field(
-        150, description="Maximum requests per minute", ge=10, le=1000
-    )
-    use_domain_info: bool = Field(
-        False, description="Use results from domain analysis if available"
-    )
+# Define the request model locally for the endpoint
+class ScanRequest(BaseModel):
+    target: str
+    use_domain_info: bool = False
+    severity_filter: Optional[str] = None  # Keep as string for input flexibility
+    rate_limit: int = 150
+    # Add other fields corresponding to scan_target parameters if needed
 
 
-@router.post(
-    "/scan-target",
-    response_model=NetworkScanResult,
-    description="Scan a target for security vulnerabilities using Nuclei",
-)
-async def scan_target(request: NetworkScanRequest):
-    """Scan a target for security vulnerabilities using the NetworkSecurityAgent."""
+# Use NetworkScanResult as the response model
+@router.post("/scan-target", response_model=NetworkScanResult)
+async def scan_target_endpoint(
+    request: Annotated[ScanRequest, Body()],
+) -> NetworkScanResult:
+    """Scan a target using the Network Security Agent."""
     try:
-        # If domain info is requested, try to get it first
-        domain_info = None
-        if request.use_domain_info and request.target:
-            try:
-                # Extract the domain from the target
-                from urllib.parse import urlparse
+        logger.info(f"Received request to scan target: {request.target}")
+        domain_analysis_results = None
 
-                parsed = urlparse(
-                    request.target
-                    if "//" in request.target
-                    else f"http://{request.target}"
+        if request.use_domain_info:
+            domain = extract_domain(request.target)
+            if domain:
+                logger.info(
+                    f"Domain info requested for target {request.target}, "
+                    f"extracted domain: {domain}. Fetching info..."
                 )
-                domain = parsed.netloc or parsed.path
-                domain = domain.split(":")[0]  # Remove port if present
-
-                # Get domain info if it's a valid domain
-                if "." in domain:
-                    domain_result = await domain_analyzer_agent.analyze_domain(
-                        domain,
-                        include_subdomains=True,
-                        include_whois=True,
-                        include_dns=True,
+                try:
+                    # Call the domain analysis function directly
+                    domain_analysis_results = await run_domain_analysis(domain)
+                    if domain_analysis_results:
+                        logger.info(f"Successfully fetched domain info for {domain}")
+                    else:
+                        logger.warning(
+                            f"Domain analysis for {domain} returned no results."
+                        )
+                except Exception as domain_e:
+                    # Log the error but continue the scan without domain info
+                    logger.warning(
+                        f"Could not fetch domain info for {domain} "
+                        f"due to error: {domain_e}. Proceeding scan without it."
                     )
-                    domain_info = domain_result.model_dump(
-                        exclude={"analysis_id", "timestamp"}
-                    )
-            except Exception:
-                # Log the error but continue without domain info
-                pass
+                    domain_analysis_results = None
+            else:
+                logger.warning(
+                    f"Could not extract domain from target {request.target} "
+                    "to fetch domain info."
+                )
 
-        # Run the security scan
-        result = await network_security_agent.scan_target(
+        # Convert severity string to enum if provided
+        severity_enum: Optional[ScanSeverity] = None
+        if request.severity_filter:
+            try:
+                severity_enum = ScanSeverity(request.severity_filter.lower())
+            except ValueError as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid severity filter value: {request.severity_filter}. "
+                    f"Valid values are: {', '.join([s.value for s in ScanSeverity])}",
+                ) from e
+
+        # Call the standalone scan_target function
+        scan_result = await scan_target(
             target=request.target,
-            domain_info=domain_info,
-            severity_filter=request.severity_filter,
+            domain_info=(
+                domain_analysis_results.model_dump()
+                if domain_analysis_results
+                else None
+            ),  # Pass as dict
+            severity_filter=severity_enum,
             rate_limit=request.rate_limit,
+            # Pass other relevant params from ScanRequest
+            # if scan_target accepts them
         )
 
-        return result
+        if scan_result:
+            logger.info(f"Successfully scanned target: {request.target}")
+            # Return the NetworkScanResult directly
+            return scan_result
+        else:
+            logger.error(f"Network scan failed for target {request.target}")
+            raise HTTPException(
+                status_code=500, detail="Network scan failed or returned no result."
+            )
+
+    except HTTPException as http_exc:
+        # Re-raise HTTPExceptions to preserve status code and details
+        raise http_exc
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error scanning target: {e!s}")
+        logger.exception(f"Error during network scan for {request.target}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error scanning target: {e!s}"
+        ) from e
 
 
 @router.get("/")
-async def get_agents_root():
-    """Root endpoint for the agents router."""
+async def get_agents_root() -> Dict[str, List[str] | str]:
+    """Get the root of the agents router."""
     return {
         "message": "Agent router is active",
         "available_agents": ["domain_analyzer_agent", "network_security_agent"],

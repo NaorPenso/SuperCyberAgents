@@ -50,7 +50,7 @@ app = FastAPI(
 )
 
 # Include agent routes
-app.include_router(agents_router.router, prefix="/agents", tags=["Agents"])
+app.include_router(agents_router.router, tags=["Agents"])
 
 
 # Health Check Endpoint
